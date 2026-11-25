@@ -17,7 +17,12 @@ public static class CliLoop
             Console.Write(prompt);
 
             string? input = Console.ReadLine();
-            if (input == null || input == string.Empty) continue;
+            // EOF (stdin is /dev/null, a closed pipe, or a non-interactive
+            // parent): stop instead of re-printing the prompt in a tight loop.
+            // The old `continue` here wrote "# " forever, pinning a core and
+            // growing server.log by ~640 KB/s.
+            if (input == null) break;
+            if (input == string.Empty) continue;
 
             var result = manager.ExecuteCommandAsync(input).GetAwaiter().GetResult();
             if (result.Color.HasValue) Console.ForegroundColor = result.Color.Value;
