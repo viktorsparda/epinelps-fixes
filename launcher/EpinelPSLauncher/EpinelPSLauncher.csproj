@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AppendRuntimeIdentifierToOutputPath>true</AppendRuntimeIdentifierToOutputPath>
+		<OutputType>WinExe</OutputType>
+        <Version>0.0.0.2</Version>
+    </PropertyGroup>
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="DnsClient" Version="1.8.0" />
+        <PackageReference Include="FluentAvaloniaUI" Version="3.1.0" />
+        <PackageReference Include="Google.Protobuf" Version="3.36.2" />
+        <PackageReference Include="Grpc.Tools" Version="2.84.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="K4os.Compression.LZ4" Version="1.3.8" />
+        <PackageReference Include="SharpCompress" Version="0.50.4" />
+        <PackageReference Include="ZstdNet" Version="1.4.5" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="myCA.pem">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="myCA.pfx">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="site.pfx">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="sodium.dll">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Views\LoginView.axaml.cs">
+            <DependentUpon>LoginView.axaml</DependentUpon>
+        </Compile>
+        <Compile Update="Views\ShellView.axaml.cs">
+          <DependentUpon>ShellView.axaml</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(SolutionDir)LauncherUtility/bin/$(Configuration)/net10.0/win-x64/native/**" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="$(SolutionDir)$(Platform)/$(Configuration)/**" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+</Project>

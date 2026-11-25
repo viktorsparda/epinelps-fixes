@@ -28,3 +28,18 @@ The modified files are:
 The changes were developed with AI assistance; see the AI disclosure in
 `README.md`. This fork is not affiliated with or endorsed by the EpinelPS
 developers.
+
+## Bundled third-party components
+
+- `launcher/` is an unmodified copy of the EpinelPSLauncher source from
+  <https://github.com/EpinelPS/EpinelPSLauncher> at commit
+  `d219c64347328de627764dcfd2f82f31199a7569`, licensed AGPL-3.0 (its `LICENSE`
+  is included in that directory). See `launcher/BUNDLED.md`.
+- `vendor/launcher-windows/` contains the four Windows-only helper binaries
+  built from that same launcher commit, with `SHA256SUMS`. See its `README.md`.
+- `vendor/server-data/gamecommon.json` is the runtime configuration file from
+  the official EpinelPS distribution; it is required at server startup and is
+  not part of the upstream source tree.
+
+The server source modifications and the helper scripts/tools in `scripts/`,
+`tools/` and `docs/` are part of this fork.

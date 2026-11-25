@@ -1,0 +1,9 @@
+LIBRARY
+EXPORTS
+	InitAceClient @1
+	InitAceClient0 @2
+	InitAceClient2 @3
+	InitAceClient3 @4
+	InitAceClient4 @5
+	InitAceClient5 @6
+	NullExportFunction @7

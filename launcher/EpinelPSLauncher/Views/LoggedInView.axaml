@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="EpinelPSLauncher.Views.LoggedInView"
+			 Loaded="UserControl_Loaded">
+	<Grid Margin="2">
+
+		<Button x:Name="UpdateRepairButton" Click="UpdateOrRepair_Click" VerticalAlignment="Bottom">Update/repair</Button>
+		<StackPanel x:Name="InstallArea" HorizontalAlignment="Center" VerticalAlignment="Bottom"  Orientation="Vertical">
+		<TextBlock x:Name="GameVersion" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimary}" Margin="5">Version: Unknown</TextBlock>
+			<Button x:Name="PlayButton" Click="Play_Click" Padding="100,20,100,20">Play</Button>
+		</StackPanel>
+	</Grid>
+</UserControl>

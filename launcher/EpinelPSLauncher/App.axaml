@@ -1,0 +1,25 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="EpinelPSLauncher.App"
+             RequestedThemeVariant="Default"
+			       xmlns:sty="using:FluentAvalonia.Styling">
+
+    <Application.Styles>
+		  <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True"/>
+    </Application.Styles>
+
+    <Application.Resources>
+      <ResourceDictionary>
+        <ResourceDictionary.ThemeDictionaries>
+            <ResourceDictionary x:Key="Light">
+                <Color x:Key="BGGradient1">#afb9dc</Color>
+                <Color x:Key="BGGradient2">#8097f3</Color>
+            </ResourceDictionary>
+            <ResourceDictionary x:Key="Dark">
+                <Color x:Key="BGGradient1">#15171E</Color>
+                <Color x:Key="BGGradient2">#2a3045</Color>
+            </ResourceDictionary>
+        </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+    </Application.Resources>
+</Application>

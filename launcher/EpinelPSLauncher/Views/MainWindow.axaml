@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:EpinelPSLauncher.Views"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+        x:Class="EpinelPSLauncher.Views.MainWindow"
+        Width="800" Height="600"
+        WindowStartupLocation="CenterScreen"
+        Background="Transparent"
+		Title="EpinelPS Launcher">
+
+	<Panel>
+		<!-- Gradient Background -->
+		<Panel>
+			<Rectangle>
+				<Rectangle.Fill>
+					<LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+						<GradientStop Offset="0" Color="{DynamicResource BGGradient1}"/>
+						<GradientStop Offset="1" Color="{DynamicResource BGGradient2}"/>
+					</LinearGradientBrush>
+				</Rectangle.Fill>
+			</Rectangle>
+		</Panel>
+
+		<Grid RowDefinitions="Auto,Auto,*" Margin="20">
+			<!-- Header with Window Controls -->
+			<Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
+
+				<TextBlock x:Name="Username" Grid.Column="0"></TextBlock>
+				<Button x:Name="BackButton" Click="Button_Click" Grid.Column="0" IsVisible="False">Back</Button>
+				<Button x:Name="AccountButton" Margin="0,0,15,0" Height="40" Grid.Column="3">
+				Options
+					<Button.Flyout>
+						<Flyout>
+							<WrapPanel Orientation="Vertical" ItemSpacing="5">
+								<HyperlinkButton x:Name="LinkSettings" Click="Settings_Click">Settings</HyperlinkButton>
+								<HyperlinkButton x:Name="LinkLogout" Click="Logout_Click">Logout</HyperlinkButton>
+							</WrapPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
+			</Grid>
+
+			<!-- Main Content -->
+			<views:ShellView Grid.Row="2"/>
+		</Grid>
+	</Panel>
+</Window>
