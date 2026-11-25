@@ -149,6 +149,19 @@ internal class Program
             using IServiceScope gameContextScope = app.Services.CreateScope();
             GameContext.SetInstance(gameContextScope.ServiceProvider.GetRequiredService<GameContext>());
 
+            // Wine's Media Foundation cannot open the HTTPS cutscene URL, so
+            // redirect that one video to the local HTTP copy, which it can read.
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Scheme == "https" &&
+                    context.Request.Path.Equals("/media/ch01_end_ja.mp4", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("http://127.0.0.1/media/ch01_end_ja.mp4", permanent: false);
+                    return;
+                }
+                await next();
+            });
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseMiddleware<EncryptionMiddleware>();
