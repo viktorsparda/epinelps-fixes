@@ -1,0 +1,1162 @@
+using EpinelPS.Utils;
+using ICSharpCode.SharpZipLib.Zip;
+using MemoryPack;
+using Newtonsoft.Json;
+using System.Data;
+using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+
+namespace EpinelPS.Data;
+
+public class GameData
+{
+    private static GameData? _instance;
+    public static GameData Instance
+    {
+        get
+        {
+            return _instance;
+        }
+    }
+
+    public byte[] MpkHash = [];
+    public int MpkSize;
+
+    private ZipFile MainZip;
+    private MemoryStream ZipStream;
+    private int totalFiles = 1;
+    private int currentFile;
+
+    public readonly Dictionary<string, FieldMapRecord> MapData = [];
+
+    //ArchiveEvent
+    [LoadRecord("ArchiveEventDungeonTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveEventDungeonRecord> ArchiveEventDungeonreRecordRaws = [];
+
+    [LoadRecord("ArchiveEventDungeonSpotBattleTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveEventDungeonSpotBattleRecord> ArchiveEventDungeonSpotBattleRecords = [];
+
+    [LoadRecord("ArchiveEventDungeonDifficultTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveEventDungeonDifficultRecord> ArchiveEventDungeonDifficultRecords = [];
+
+    [LoadRecord("ArchiveEventDungeonStageTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveEventDungeonStageRecord> archiveEventDungeonStageRecords = [];
+    [LoadRecord("CashShopTable.json", "Id")]
+    public readonly Dictionary<int, CashShopRecord> CashShopRecords = [];
+    [LoadRecord("FunctionTable.json", "Id")]
+    public readonly Dictionary<int, FunctionRecord> FunctionRecords = [];
+
+    //解放
+    [LoadRecord("LiberateTypeTable.json", "Id")]
+    public readonly Dictionary<int, LiberateTypeRecord> LiberateTypeTable = [];
+    [LoadRecord("LiberateMissionTable.json", "Id")]
+    public readonly Dictionary<int, LiberateMissionRecord> LiberateMissionTable = [];
+    [LoadRecord("LiberateMissionGroupTable.json", "Id")]
+    public readonly Dictionary<int, LiberateMissionGroupRecord> LiberateMissionGroupTable = [];
+    [LoadRecord("LiberateCharacterTable.json", "Id")]
+    public readonly Dictionary<int, LiberateCharacterRecord> LiberateCharacterTable = [];
+    [LoadRecord("LiberateAttractiveEpisodeTable.json", "Id")]
+    public readonly Dictionary<int, LiberateAttractiveEpisode> LiberateAttractiveEpisodeTable = [];
+
+    [LoadRecord("ItemSelectOptionTable.json", "Id")]
+    public readonly Dictionary<int, ItemSelectOptionRecord> SelectItem = [];
+
+    [LoadRecord("ItemSelectOptionRowTable.json", "Id")]
+    public readonly Dictionary<int, ItemSelectOptionRowRecord> SelectRowItem = [];
+
+    [LoadRecord("BundleBoxTable.json", "Id")]
+    public readonly Dictionary<int, BundleBoxRecord> BundleBox = [];
+    [LoadRecord("MainQuestTable.json", "Id")]
+    public readonly Dictionary<int, MainQuestRecord> QuestDataRecords = [];
+
+    [LoadRecord("CampaignStageTable.json", "Id")]
+    public readonly Dictionary<int, CampaignStageRecord> StageDataRecords = [];
+
+    [LoadRecord("RewardTable.json", "Id")]
+    public readonly Dictionary<int, RewardRecord> RewardDataRecords = [];
+
+    [LoadRecord("UserExpTable.json", "Level")]
+    public readonly Dictionary<int, UserExpRecord> UserExpDataRecords = [];
+
+    [LoadRecord("CampaignChapterTable.json", "Chapter")]
+    public readonly Dictionary<int, CampaignChapterRecord> ChapterCampaignData = [];
+
+    [LoadRecord("ContentsOpenTable.json", "Id")]
+    public readonly Dictionary<ContentsOpen, ContentsOpenRecord> ContentsOpenTable = [];
+
+    [LoadRecord("CharacterCostumeTable.json", "Id")]
+    public readonly Dictionary<int, CharacterCostumeRecord> CharacterCostumeTable = [];
+
+    [LoadRecord("CharacterTable.json", "Id")]
+    public readonly Dictionary<int, CharacterRecord> CharacterTable = [];
+
+    [LoadRecord("ContentsTutorialTable.json", "Id")]
+    public readonly Dictionary<int, ContentsTutorialRecord> TutorialTable = [];
+    [LoadRecord("ItemEquipTable.json", "Id")]
+
+    public readonly Dictionary<int, ItemEquipRecord> ItemEquipTable = [];
+
+    [LoadRecord("ItemMaterialTable.json", "Id")]
+    public readonly Dictionary<int, ItemMaterialRecord> itemMaterialTable = [];
+
+    [LoadRecord("ItemEquipExpTable.json", "Id")]
+    public readonly Dictionary<int, ItemEquipExpRecord> itemEquipExpTable = [];
+
+    [LoadRecord("ItemEquipGradeExpTable.json", "Id")]
+    public readonly Dictionary<int, ItemEquipGradeExpRecord> ItemEquipGradeExpTable = [];
+
+    [LoadRecord("CharacterLevelTable.json", "Level")]
+    public readonly Dictionary<int, CharacterLevelRecord> LevelData = [];
+
+    [LoadRecord("TacticAcademyFunctionTable.json", "Id")]
+    public readonly Dictionary<int, TacticAcademyFunctionRecord> TacticAcademyLessons = [];
+
+    [LoadRecord("SIdeStoryStageTable.json", "Id")]
+    public readonly Dictionary<int, SideStoryStageRecord> SidestoryRewardTable = [];
+
+    [LoadRecord("FieldItemTable.json", "Id")]
+    public readonly Dictionary<int, FieldItemRecord> FieldItems = [];
+    [LoadRecord("DispatchTable.json", "Id")]
+    public readonly Dictionary<int, DispatchRecord> DispatchTable = [];
+    [LoadRecord("DispatchResetTable.json", "Id")]
+    public readonly Dictionary<int, DispatchResetRecord> DispatchResetTable = [];
+    [LoadRecord("DispatchBoardTable.json", "Id")]
+    public readonly Dictionary<int, DispatchBoardRecord> DispatchBoardTable = [];
+    [LoadRecord("OutpostBattleTable.json", "Id")]
+    public readonly Dictionary<int, OutpostBattleRecord> OutpostBattle = [];
+
+    [LoadRecord("JukeboxListTable.json", "Id")]
+    public readonly Dictionary<int, JukeboxListRecord> jukeboxListDataRecords = [];
+
+    [LoadRecord("JukeboxThemeTable.json", "Id")]
+    public readonly Dictionary<int, JukeboxThemeRecord> jukeboxThemeDataRecords = [];
+
+    // Gacha Banners
+
+    [LoadRecord("GachaTypeTable.json", "Id")]
+    public readonly Dictionary<int, GachaTypeRecord> gachaTypes = [];
+
+    [LoadRecord("GachaGradeProbTable.json", "Id")]
+    public readonly Dictionary<int, GachaGradeProbRecord> GachaGradeProb = [];
+
+    [LoadRecord("GachaListProbTable.json", "Id")]
+    public readonly Dictionary<int, GachaListProbRecord> GachaListProb = [];
+
+    [LoadRecord("GachaPaybackTable.json", "Id")]
+    public readonly Dictionary<int, GachaPaybackRecord_Raw> GachaPaybackRecords = [];
+
+
+    [LoadRecord("GachaPaybackStepTable.json", "Id")]
+    public readonly Dictionary<int, GachaPaybackStepRecord_Raw> GachaPaybackStepRecords = [];
+
+
+    [LoadRecord("GachaPityCharacterTable.json", "Id")]
+    public readonly Dictionary<int, GachaPityCharacterRecord_Raw> GachaPityCharacterRecords = [];
+
+
+    [LoadRecord("GachaPityTable.json", "Id")]
+    public readonly Dictionary<int, GachaPityRecord_Raw> GachaPityRecords = [];
+
+    [LoadRecord("GachaSelectupListTable.json", "Id")]
+    public readonly Dictionary<int, GachaSelectupListRecord_Raw> GachaSelectupListTable = [];
+
+    // End Gacha Banners
+
+    [LoadRecord("EventManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventManagerRecord> eventManagers = [];
+
+    [LoadRecord("LiveWallpaperTable.json", "Id")]
+    public readonly Dictionary<int, LiveWallpaperRecord> LiveWallpaperTable = [];
+
+    [LoadRecord("AlbumResourceTable.json", "Id")]
+    public readonly Dictionary<int, AlbumResourceRecord> albumResourceRecords = [];
+
+    [LoadRecord("ArchiveRecordManagerTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveRecordManagerRecord> archiveRecordManagerTable = [];
+
+    [LoadRecord("ArchiveEventStoryTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveEventStoryRecord> archiveEventStoryRecords = [];
+
+    [LoadRecord("ArchiveEventQuestTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveEventQuestRecord_Raw> archiveEventQuestRecords = [];
+    [LoadRecord("ArchiveMessengerConditionTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveMessengerConditionRecord> archiveMessengerConditionRecords = [];
+
+    [LoadRecord("CharacterStatTable.json", "Id")]
+    public readonly Dictionary<int, CharacterStatRecord> characterStatTable = [];
+
+    [LoadRecord("SkillInfoTable.json", "Id")]
+    public readonly Dictionary<int, SkillInfoRecord> skillInfoTable = [];
+
+    [LoadRecord("CostTable.json", "Id")]
+    public readonly Dictionary<int, CostRecord> costTable = [];
+
+    [LoadRecord("MidasProductTable.json", "MidasProductIdProximabeta")]
+    public readonly Dictionary<string, MidasProductRecord> mediasProductTable = [];
+
+    // CashShop / InAppShop data. These tables are consumed by ViewCashShop's
+    // InAppShopManager and its package/costume page components.
+    [LoadRecord("InAppShopManagerTable.json", "Id")]
+    public readonly Dictionary<int, InAppShopManagerRecord> InAppShopManagerTable = [];
+
+    [LoadRecord("InAppShopInfoTable.json", "Id")]
+    public readonly Dictionary<int, InAppShopInfoRecord> InAppShopInfoTable = [];
+
+    [LoadRecord("CostumeShopTable.json", "Id")]
+    public readonly Dictionary<int, CostumeShopRecord> CostumeShopTable = [];
+
+    [LoadRecord("PackageShopTable.json", "Id")]
+    public readonly Dictionary<int, PackageShopRecord> PackageShopTable = [];
+
+    [LoadRecord("PackageListTable.json", "Id")]
+    public readonly Dictionary<int, PackageListRecord> PackageListTable = [];
+
+    [LoadRecord("PackageGroupTable.json", "Id")]
+    public readonly Dictionary<int, PackageGroupRecord> PackageGroupTable = [];
+
+    [LoadRecord("CampaignPackageShopTable.json", "Id")]
+    public readonly Dictionary<int, CampaignPackageShopRecord> CampaignPackageShopTable = [];
+
+    [LoadRecord("CustomPackageShopTable.json", "Id")]
+    public readonly Dictionary<int, CustomPackageShopRecord> CustomPackageShopTable = [];
+
+    [LoadRecord("StepUpPackageShopTable.json", "Id")]
+    public readonly Dictionary<int, StepUpPackageShopRecord> StepUpPackageShopTable = [];
+
+    [LoadRecord("PassCostumeShopTable.json", "Id")]
+    public readonly Dictionary<int, PassCostumeShopRecord_Raw> PassCostumeShopTable = [];
+
+    [LoadRecord("TowerTable.json", "Id")]
+    public readonly Dictionary<int, TowerRecord> towerTable = [];
+
+    [LoadRecord("TriggerTable.json", "Id")]
+    public readonly Dictionary<int, TriggerRecord> TriggerTable = [];
+
+    [LoadRecord("InfraCoreGradeTable.json", "Id")]
+    public readonly Dictionary<int, InfraCoreGradeRecord> InfracoreTable = [];
+
+    [LoadRecord("AttractiveCounselCharacterTable.json", "NameCode")]
+    public readonly Dictionary<int, AttractiveCounselCharacterRecord_Raw> AttractiveCounselCharacterTable = [];
+
+    [LoadRecord("AttractiveLevelRewardTable.json", "Id")]
+    public readonly Dictionary<int, AttractiveLevelRewardRecord> AttractiveLevelReward = [];
+
+    [LoadRecord("AttractiveLevelTable.json", "Id")]
+    public readonly Dictionary<int, AttractiveLevelRecord> AttractiveLevelTable = [];
+
+    [LoadRecord("SubQuestTable.json", "Id")]
+    public readonly Dictionary<int, SubQuestRecord> Subquests = [];
+
+    [LoadRecord("MessengerDialogTable.json", "Id")]
+    public readonly Dictionary<string, MessengerDialogRecord> Messages = [];
+
+    [LoadRecord("MessengerConditionTriggerTable.json", "Id")]
+    public readonly Dictionary<int, MessengerConditionTriggerRecord> MessageConditions = [];
+
+    [LoadRecord("MessengerRoomTable.json", "Id")]
+    public readonly Dictionary<string, MessengerRoomRecord> MessengerRooms = [];
+
+    [LoadRecord("ScenarioRewardsTable.json", "ConditionId")]
+    public readonly Dictionary<string, ScenarioRewardsRecord> ScenarioRewards = [];
+
+    // Note: same data types are intentional
+    [LoadRecord("ProductOfferTable.json", "Id")]
+    public readonly Dictionary<int, ProductOfferRecord> ProductOffers = [];
+
+    [LoadRecord("PopupPackageListTable.json", "Id")]
+    public readonly Dictionary<int, PopupPackageListRecord> PopupPackages = [];
+
+    [LoadRecord("InterceptNormalTable.json", "Id")]
+    public readonly Dictionary<int, InterceptNormalRecord> InterceptNormal = [];
+
+    [LoadRecord("InterceptSpecialTable.json", "Id")]
+    public readonly Dictionary<int, InterceptSpecialRecord> InterceptSpecial = [];
+
+    [LoadRecord("ConditionRewardTable.json", "Id")]
+    public readonly Dictionary<int, ConditionRewardRecord> ConditionRewards = [];
+    [LoadRecord("ItemConsumeTable.json", "Id")]
+    public readonly Dictionary<int, ItemConsumeRecord> ConsumableItems = [];
+    [LoadRecord("ItemRandomTable.json", "Id")]
+    public readonly Dictionary<int, ItemRandomRecord> RandomItem = [];
+    [LoadRecord("LostSectorTable.json", "Id")]
+    public readonly Dictionary<int, LostSectorRecord> LostSector = [];
+    [LoadRecord("LostSectorStageTable.json", "Id")]
+    public readonly Dictionary<int, LostSectorStageRecord> LostSectorStages = [];
+    [LoadRecord("ItemPieceTable.json", "Id")]
+    public readonly Dictionary<int, ItemPieceRecord> PieceItems = [];
+
+    // Outpost
+    [LoadRecord("RecycleResearchStatTable.json", "Id")]
+    public readonly Dictionary<int, RecycleResearchStatRecord> RecycleResearchStats = [];
+    [LoadRecord("RecycleResearchLevelTable.json", "Id")]
+    public readonly Dictionary<int, RecycleResearchLevelRecord> RecycleResearchLevels = [];
+    [LoadRecord("OutpostConditionTriggerTable.json", "Id")]
+    public readonly Dictionary<int, OutpostConditionTriggerRecord> SuddenEventConditions = [];
+
+    // Harmony Cube  Data Tables
+    [LoadRecord("ItemHarmonyCubeTable.json", "Id")]
+    public readonly Dictionary<int, ItemHarmonyCubeRecord> ItemHarmonyCubeTable = [];
+
+    [LoadRecord("ItemHarmonyCubeLevelTable.json", "Id")]
+    public readonly Dictionary<int, ItemHarmonyCubeLevelRecord> ItemHarmonyCubeLevelTable = [];
+
+    // Favorite Item  Data Tables
+    [LoadRecord("FavoriteItemTable.json", "Id")]
+    public readonly Dictionary<int, FavoriteItemRecord> FavoriteItemTable = [];
+
+    [LoadRecord("FavoriteItemExpTable.json", "Id")]
+    public readonly Dictionary<int, FavoriteItemExpRecord> FavoriteItemExpTable = [];
+
+    [LoadRecord("FavoriteItemLevelTable.json", "Id")]
+    public readonly Dictionary<int, FavoriteItemLevelRecord> FavoriteItemLevelTable = [];
+
+    [LoadRecord("FavoriteItemProbabilityTable.json", "Id")]
+    public readonly Dictionary<int, FavoriteItemProbabilityRecord> FavoriteItemProbabilityTable = [];
+
+    [LoadRecord("FavoriteItemQuestTable.json", "Id")]
+    public readonly Dictionary<int, FavoriteItemQuestRecord> FavoriteItemQuestTable = [];
+
+    [LoadRecord("FavoriteItemQuestStageTable.json", "Id")]
+    public readonly Dictionary<int, FavoriteItemQuestStageRecord> FavoriteItemQuestStageTable = [];
+
+    // Tables related to PlaySoda Arcade's event.
+
+    [LoadRecord("EventPlaySodaManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventPlaySodaManagerRecord> EventPlaySodaManagerTable = [];
+
+    [LoadRecord("EventPlaySodaStoryModeTable.json", "Id")]
+    public readonly Dictionary<int, EventPlaySodaStoryModeRecord> EventPlaySodaStoryModeTable = [];
+
+    [LoadRecord("EventPlaySodaChallengeModeTable.json", "Id")]
+    public readonly Dictionary<int, EventPlaySodaChallengeModeRecord> EventPlaySodaChallengeModeTable = [];
+
+    [LoadRecord("EventPlaySodaPointRewardTable.json", "Id")]
+    public readonly Dictionary<int, EventPlaySodaPointRewardRecord> EventPlaySodaPointRewardTable = [];
+
+    // Tables related to InTheMirror Arcade's event.
+
+    [LoadRecord("EventMvgQuestTable.json", "Id")]
+    public readonly Dictionary<int, EventMVGQuestRecord_Raw> EventMvgQuestTable = [];
+
+    [LoadRecord("EventMvgShopTable.json", "Id")]
+    public readonly Dictionary<int, EventMVGShopRecord_Raw> EventMvgShopTable = [];
+
+    [LoadRecord("EventMVGMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventMVGMissionRecord_Raw> EventMvgMissionTable = [];
+
+    [LoadRecord("EquipmentOptionTable.json", "Id")]
+    public readonly Dictionary<int, EquipmentOptionRecord> EquipmentOptionTable = [];
+
+    [LoadRecord("EquipmentOptionCostTable.json", "Id")]
+    public readonly Dictionary<int, EquipmentOptionCostRecord> EquipmentOptionCostTable = [];
+
+    [LoadRecord("ItemEquipCorpSettingTable.json", "Id")]
+    public readonly Dictionary<int, ItemEquipCorpSettingRecord> ItemEquipCorpSettingTable = [];
+
+    [LoadRecord("LobbyPrivateBannerTable.json", "Id")]
+    public readonly Dictionary<int, LobbyPrivateBannerRecord> LobbyPrivateBannerTable = [];
+
+    [LoadRecord("LoginEventTable.json", "Id")]
+    public readonly Dictionary<int, LoginEventRecord> LoginEventTable = [];
+
+    //小游戏
+    [LoadRecord("ArcadeConfigTable.json", "Id")]
+    public readonly Dictionary<string, ArcadeConfigRecord_Raw> ArcadeConfigTable = [];
+    [LoadRecord("ArcadeManagerTable.json", "Id")]
+    public readonly Dictionary<int, ArcadeManagerRecord_Raw> ArcadeManagerTable = [];
+
+    //小游戏 TTs Game
+    [LoadRecord("EventTTSManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSManagerRecord_Raw> EventTTSManagerTable = [];
+    [LoadRecord("EventTTSMaxScoreTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSMaxScoreRecord_Raw> EventTTSMaxScoreTable = [];
+    [LoadRecord("EventTTSMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSMissionRecord_Raw> EventTTSMissionTable = [];
+    [LoadRecord("EventTTSScenarioManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSScenarioManagerRecord_Raw> EventTTSScenarioManagerTable = [];
+    [LoadRecord("EventTTSSongGroupManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSSongGroupManagerRecord_Raw> EventTTSSongGroupManagerTable = [];
+    [LoadRecord("EventTTSSongManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSSongManagerRecord_Raw> EventTTSSongManagerTable = [];
+    [LoadRecord("EventTTSTipLocaleTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSTipLocaleRecord_Raw> EventTTSTipLocaleTable = [];
+    [LoadRecord("EventTTSTutorialTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSTutorialRecord_Raw> EventTTSTutorialTable = [];
+    [LoadRecord("TTSAlbumShopTable.json", "Id")]
+    public readonly Dictionary<int, TTSAlbumShopRecord_Raw> TTSAlbumShopTable = [];
+    [LoadRecord("EventTTSProductNoticeManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSProductNoticeManagerRecord_Raw> EventTTSProductNoticeManagerTable = [];
+    [LoadRecord("EventTTSSkinObjectTable.json", "Id")]
+    public readonly Dictionary<int, EventTTSSkinObjectRecord_Raw> EventTTSSkinObjectTable = [];
+
+    //小游戏Stellar Blade
+    [LoadRecord("EventSBCharacterAttackTable.json", "Id")]
+    public readonly Dictionary<int, EventSBCharacterAttackRecord_Raw> EventSBCharacterAttackTable = [];
+    [LoadRecord("EventSBCharacterEnhanceTable.json", "Id")]
+    public readonly Dictionary<int, EventSBCharacterEnhanceRecord_Raw> EventSBCharacterEnhanceTable = [];
+    [LoadRecord("EventSBCharacterSkillTable.json", "Id")]
+    public readonly Dictionary<int, EventSBCharacterSkillRecord_Raw> EventSBCharacterSkillTable = [];
+    [LoadRecord("EventSBCharacterTable.json", "Id")]
+    public readonly Dictionary<int, EventSBCharacterRecord_Raw> EventSBCharacterTable = [];
+    [LoadRecord("EventSBCurrencyTable.json", "Id")]
+    public readonly Dictionary<int, EventSBCurrencyRecord_Raw> EventSBCurrencyTable = [];
+    [LoadRecord("EventSBInGameGuideTable.json", "Id")]
+    public readonly Dictionary<int, EventSBInGameGuideRecord_Raw> EventSBInGameGuideTable = [];
+    [LoadRecord("EventSBItemTable.json", "Id")]
+    public readonly Dictionary<int, EventSBItemRecord_Raw> EventSBItemTable = [];
+    [LoadRecord("EventSBManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventSBManagerRecord_Raw> EventSBManagerTable = [];
+    [LoadRecord("EventSBMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventSBMissionRecord_Raw> EventSBMissionTable = [];
+    [LoadRecord("EventSBMonsterAttackStateTable.json", "Id")]
+    public readonly Dictionary<int, EventSBMonsterAttackStateRecord_Raw> EventSBMonsterAttackStateTable = [];
+    [LoadRecord("EventSBMonsterAttackTable.json", "Id")]
+    public readonly Dictionary<int, EventSBMonsterAttackRecord_Raw> EventSBMonsterAttackTable = [];
+    [LoadRecord("EventSBMonsterTable.json", "Id")]
+    public readonly Dictionary<int, EventSBMonsterRecord_Raw> EventSBMonsterTable = [];
+    [LoadRecord("EventSBShopTable.json", "Id")]
+    public readonly Dictionary<int, EventSBShopRecord_Raw> EventSBShopTable = [];
+    [LoadRecord("EventSBStageRewardTable.json", "Id")]
+    public readonly Dictionary<int, EventSBStageRewardRecord_Raw> EventSBStageRewardTable = [];
+    [LoadRecord("EventSBStageTable.json", "Id")]
+    public readonly Dictionary<int, EventSBStageRecord_Raw> EventSBStageTable = [];
+    [LoadRecord("EventSBTimeLineTable.json", "Id")]
+    public readonly Dictionary<int, EventSBTimeLineRecord_Raw> EventSBTimeLineTable = [];
+    [LoadRecord("EventSBTutorialListTable.json", "Id")]
+    public readonly Dictionary<int, EventSBTutorialListRecord_Raw> EventSBTutorialListTable = [];
+
+    //小游戏TowerDefense
+    [LoadRecord("EventTowerDefenseArcadeManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTowerDefenseArcadeManagerRecord_Raw> EventTowerDefenseArcadeManagerTable = [];
+    [LoadRecord("EventTowerDefenseArchiveManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTowerDefenseArchiveManagerRecord_Raw> EventTowerDefenseArchiveManagerTable = [];
+    [LoadRecord("EventTowerDefenseManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventTowerDefenseManagerRecord> EventTowerDefenseManagerTable = [];
+    [LoadRecord("EventTowerDefenseMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventTowerDefenseMissionRecord> EventTowerDefenseMissionTable = [];
+    [LoadRecord("EventTowerDefenseStageTable.json", "Id")]
+    public readonly Dictionary<int, EventTowerDefenseStageRecord> EventTowerDefenseStageTable = [];
+    [LoadRecord("EventTowerDefenseUpgradeGroupTable.json", "Id")]
+    public readonly Dictionary<int, EventTowerDefenseUpgradeGroupRecord> EventTowerDefenseUpgradeGroupTable = [];
+    [LoadRecord("EventTowerDefenseUpgradeListTable.json", "Id")]
+    public readonly Dictionary<int, EventTowerDefenseUpgradeListRecord> EventTowerDefenseUpgradeListTable = [];
+
+    //BBQ
+    [LoadRecord("EventBBQTycoonStepUpRewardTable.json", "Id")]
+    public readonly Dictionary<int, EventBBQTycoonStepUpRewardRecord> EventBBQTycoonStepUpRewardTable = [];
+
+    //Dessert Rush
+    [LoadRecord("EventDessertRushManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventDessertRushManagerRecord> EventDessertRushManagerTable = [];
+    [LoadRecord("EventDessertRushStepUpRewardTable.json", "Id")]
+    public readonly Dictionary<int, EventDessertRushStepUpRewardRecord> EventDessertRushStepUpRewardTable = [];
+
+    //Sort Out
+    [LoadRecord("EventSortOutMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventSortOutMissionRecord_Raw> EventSortOutMissionTable = [];
+    [LoadRecord("EventSortOutTable.json", "Id")]
+    public readonly Dictionary<int, EventSortOutRecord> EventSortOutTable = [];
+
+    //Pirate Cafe
+    [LoadRecord("EventPirateCafeManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventPirateCafeManagerRecord_Raw> EventPirateCafeManagerTable = [];
+    [LoadRecord("EventPirateCafeMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventPirateCafeMissionRecord_Raw> EventPirateCafeMissionTable = [];
+    [LoadRecord("EventPirateCafeSkillTable.json", "Id")]
+    public readonly Dictionary<int, EventPirateCafeSkillRecord_Raw> EventPirateCafeSkillTable = [];
+    [LoadRecord("EventPirateCafeStageTable.json", "Id")]
+    public readonly Dictionary<int, EventPirateCafeStageRecord_Raw> EventPirateCafeStageTable = [];
+
+    //BTG
+    [LoadRecord("EventBTGBgTable.json", "Id")]
+    public readonly Dictionary<int, EventBTGBgRecord_Raw> EventBTGBgTable = [];
+    [LoadRecord("EventBTGManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventBTGManagerRecord_Raw> EventBTGManagerTable = [];
+    [LoadRecord("EventBTGMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventBTGMissionRecord_Raw> EventBTGMissionTable = [];
+
+    //DragonDungeonRun
+    [LoadRecord("EventDragonDungeonRunCharacterTable.json", "Id")]
+    public readonly Dictionary<int, EventDragonDungeonRunCharacterRecord_Raw> EventDragonDungeonRunCharacterTable = [];
+    [LoadRecord("EventDragonDungeonRunCutSceneTable.json", "Id")]
+    public readonly Dictionary<int, EventDragonDungeonRunCutSceneRecord_Raw> EventDragonDungeonRunCutSceneTable = [];
+    [LoadRecord("EventDragonDungeonRunManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventDragonDungeonRunManagerRecord_Raw> EventDragonDungeonRunManagerTable = [];
+    [LoadRecord("EventDragonDungeonRunMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventDragonDungeonRunMissionRecord_Raw> EventDragonDungeonRunMissionTable = [];
+    [LoadRecord("EventDragonDungeonRunScenarioTable.json", "Id")]
+    public readonly Dictionary<int, EventDragonDungeonRunScenarioRecord_Raw> EventDragonDungeonRunScenarioTable = [];
+
+
+    //Rebuild Eden
+    [LoadRecord("EventRebuildEdenManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventRebuildEdenManagerRecord_Raw> EventRebuildEdenManagerTable = [];
+    [LoadRecord("EventRebuildEdenMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventRebuildEdenMissionRecord_Raw> EventRebuildEdenMissionTable = [];
+    [LoadRecord("EventRebuildEdenRewardTable.json", "Id")]
+    public readonly Dictionary<int, EventRebuildEdenRewardRecord_Raw> EventRebuildEdenRewardTable = [];
+
+    //NKS MOG E.X.
+    [LoadRecord("EventNKSCommonSettingsTable.json", "Id")]
+    public readonly Dictionary<int, EventNKSCommonSettingsRecord> EventNKSCommonSettingsTable = [];
+    [LoadRecord("EventNKSMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventNKSMissionRecord> EventNKSMissionTable = [];
+
+
+    //Bubble March
+    [LoadRecord("EventBubbleMarchBuffTable.json", "Id")]
+    public readonly Dictionary<int, EventBubbleMarchBuffRecord_Raw> EventBubbleMarchBuffTable = [];
+    [LoadRecord("EventBubbleMarchCharacterTable.json", "Id")]
+    public readonly Dictionary<int, EventBubbleMarchCharacterRecord_Raw> EventBubbleMarchCharacterTable = [];
+    [LoadRecord("EventBubbleMarchCharacterUnlockTable.json", "Id")]
+    public readonly Dictionary<int, EventBubbleMarchCharacterUnlockRecord_Raw> EventBubbleMarchCharacterUnlockTable = [];
+    [LoadRecord("EventBubbleMarchManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventBubbleMarchManagerRecord_Raw> EventBubbleMarchManagerTable = [];
+    [LoadRecord("EventBubbleMarchMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventBubbleMarchMissionRecord_Raw> EventBubbleMarchMissionTable = [];
+    [LoadRecord("EventBubbleMarchStageManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventBubbleMarchStageManagerRecord_Raw> EventBubbleMarchStageManagerTable = [];
+    [LoadRecord("EventBubbleMarchStageTable.json", "Id")]
+    public readonly Dictionary<int, EventBubbleMarchStageRecord_Raw> EventBubbleMarchStageTable = [];
+
+
+
+
+    [LoadRecord("ProfileCardObjectTable.json", "Id")]
+    public readonly Dictionary<int, ProfileCardObjectRecord> ProfileCardObjectTable = [];
+    [LoadRecord("UserIconTable.json", "Id")]
+    public readonly Dictionary<int, UserIconRecord> UserIconTable = [];
+    [LoadRecord("UserTitleAcquireConditionTable.json", "Id")]
+    public readonly Dictionary<int, UserTitleAcquireConditionRecord> UserTitleAcquireConditionTable = [];
+    [LoadRecord("UserTitleAssemblyTable.json", "Id")]
+    public readonly Dictionary<int, UserTitleAssemblyRecord> UserTitleAssemblyTable = [];
+    [LoadRecord("UserTitleSingleTable.json", "Id")]
+    public readonly Dictionary<int, UserTitleSingleRecord> UserTitleSingleTable = [];
+    [LoadRecord("UserTitleTable.json", "Id")]
+    public readonly Dictionary<int, UserTitleRecord> userTitleRecords = [];
+    [LoadRecord("UserFrameTable.json", "Id")]
+    public readonly Dictionary<int, UserFrameRecord> userFrameTable = [];
+
+
+    // Normal Shop Data Tables
+    [LoadRecord("ShopTable.json", "Id")]
+    public readonly Dictionary<int, ShopRecord> ShopTable = [];
+    [LoadRecord("ShopProductTable.json", "Id")]
+    public readonly Dictionary<int, ShopProductRecord> ShopProductTable = [];
+
+    // Contents Shop Data Tables
+    [LoadRecord("ContentsShopTable.json", "Id")]
+    public readonly Dictionary<int, ContentsShopRecord> ContentsShopTable = [];
+    [LoadRecord("ContentsShopProductTable.json", "Id")]
+    public readonly Dictionary<int, ContentsShopProductRecord> ContentsShopProductTable = [];
+    [LoadRecord("ShopDiscountProbTable.json", "Id")]
+    public readonly Dictionary<int, ShopDiscountProbRecord> ShopDiscountProbTable = [];
+
+    // Event Dungeon data Table
+    [LoadRecord("EventDungeonTable.json", "Id")]
+    public readonly Dictionary<int, EventDungeonRecord> EventDungeonTable = [];
+    [LoadRecord("EventDungeonStageTable.json", "Id")]
+    public readonly Dictionary<int, EventDungeonStageRecord> EventDungeonStageTable = [];
+    [LoadRecord("EventDungeonSpotBattleTable.json", "Id")]
+    public readonly Dictionary<int, EventDungeonSpotBattleRecord> EventDungeonSpotBattleTable = [];
+    [LoadRecord("EventDungeonDifficultTable.json", "Id")]
+    public readonly Dictionary<int, EventDungeonDifficultRecord> EventDungeonDifficultTable = [];
+    [LoadRecord("EventStoryTable.json", "Id")]
+    public readonly Dictionary<int, EventStoryRecord> EventStoryTable = [];
+    [LoadRecord("AutoChargeTable.json", "Id")]
+    public readonly Dictionary<int, AutoChargeRecord> AutoChargeTable = [];
+    [LoadRecord("EventFieldTable.json", "Id")]
+    public readonly Dictionary<int, EventFieldRecord> EventFieldTable = [];
+
+    // Pass Data Tables
+    [LoadRecord("PassManagerTable.json", "Id")]
+    public readonly Dictionary<int, PassManagerRecord> PassManagerTable = [];
+    [LoadRecord("EventPassManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventPassManagerRecord> EventPassManagerTable = [];
+    [LoadRecord("SeasonPassTable.json", "Id")]
+    public readonly Dictionary<int, SeasonPassRecord> SeasonPassTable = [];
+    [LoadRecord("PassMissionTable.json", "Id")]
+    public readonly Dictionary<int, PassMissionRecord> PassMissionTable = [];
+
+    // Event Mission Data Tables
+    [LoadRecord("EventMissionListTable.json", "Id")]
+    public readonly Dictionary<int, EventMissionListRecord> EventMissionListTable = [];
+    [LoadRecord("EventMissionCategoryTable.json", "Id")]
+    public readonly Dictionary<int, EventMissionCategoryRecord> EventMissionCategoryTable = [];
+
+    // Daily Mission Event Data Tables
+    [LoadRecord("DailyMissionEventSettingTable.json", "Id")]
+    public readonly Dictionary<int, DailyMissionEventSettingRecord_Raw> DailyMissionEventSettingTable = [];
+    [LoadRecord("DailyEventTable.json", "Id")]
+    public readonly Dictionary<int, DailyEventRecord> DailyEventTable = [];
+
+    // SimulationRoom Data Tables
+    [LoadRecord("SimulationRoomChapterTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomChapterRecord> SimulationRoomChapterTable = [];
+    [LoadRecord("SimulationRoomStageLocationTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomStageLocationRecord> SimulationRoomStageLocationTable = [];
+    [LoadRecord("SimulationRoomSelectionEventTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomSelectionEventRecord> SimulationRoomSelectionEventTable = [];
+    [LoadRecord("SimulationRoomSelectionGroupTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomSelectionGroupRecord> SimulationRoomSelectionGroupTable = [];
+    [LoadRecord("SimulationRoomBattleEventTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomBattleEventRecord> SimulationRoomBattleEventTable = [];
+    [LoadRecord("SimulationRoomLevelScalingTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomLevelScalingRecord> SimulationRoomLevelScalingTable = [];
+    [LoadRecord("SimulationRoomBuffPreviewTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomBuffPreviewRecord> SimulationRoomBuffPreviewTable = [];
+    [LoadRecord("SimulationRoomBuffTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomBuffRecord> SimulationRoomBuffTable = [];
+
+    // SimulationRoom Overclock Data Tables
+    [LoadRecord("SimulationRoomOcLevelTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomOverclockLevelRecord> SimulationRoomOcLevelTable = [];
+    [LoadRecord("SimulationRoomOcOptionGroupTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomOverclockOptionGroupRecord> SimulationRoomOcOptionGroupTable = [];
+    [LoadRecord("SimulationRoomOcOptionTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomOverclockOptionRecord> SimulationRoomOcOptionTable = [];
+    [LoadRecord("SimulationRoomOcSeasonTable.json", "Id")]
+    public readonly Dictionary<int, SimulationRoomOverclockSeasonRecord> SimulationRoomOcSeasonTable = [];
+
+    // MiniGame AZX Tables
+    [LoadRecord("EventAZXAppleGameMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventAZXAppleGameMissionRecord_Raw> EventAZXAppleGameMissionTable = [];
+    [LoadRecord("EventAZXAppleGameBoardTable.json", "Id")]
+    public readonly Dictionary<int, EventAZXAppleGameBoardRecord_Raw> EventAZXAppleGameBoardTable = [];
+    [LoadRecord("EventAZXAppleGameCharacterTable.json", "Id")]
+    public readonly Dictionary<int, EventAZXAppleGameCharacterRecord_Raw> EventAZXAppleGameCharacterTable = [];
+    [LoadRecord("EventAZXAppleGameSkillTable.json", "Id")]
+    public readonly Dictionary<int, EventAZXAppleGameSkillRecord_Raw> EventAZXAppleGameSkillTable = [];
+    [LoadRecord("EventAZXAppleGameCutSceneTable.json", "Id")]
+    public readonly Dictionary<int, EventAZXAppleGameCutSceneRecord_Raw> EventAZXAppleGameCutSceneTable = [];
+
+    //Is Land Breaker
+    [LoadRecord("EventIslandBreakerBuffTable.json", "Id")]
+    public readonly Dictionary<int, EventIslandBreakerBuffRecord_Raw> EventIslandBreakerBuffTable = [];
+    [LoadRecord("EventIslandBreakerCharacterTable.json", "Id")]
+    public readonly Dictionary<int, EventIslandBreakerCharacterRecord_Raw> EventIslandBreakerCharacterTable = [];
+    [LoadRecord("EventIslandBreakerCurrencyTable.json", "Id")]
+    public readonly Dictionary<int, EventIslandBreakerCurrencyRecord_Raw> EventIslandBreakerCurrencyTable = [];
+    [LoadRecord("EventIslandBreakerImageTable.json", "Id")]
+    public readonly Dictionary<int, EventIslandBreakerImageRecord_Raw> EventIslandBreakerImageTable = [];
+    [LoadRecord("EventIslandBreakerManagerTable.json", "Id")]
+    public readonly Dictionary<int, EventIslandBreakerManagerRecord_Raw> EventIslandBreakerManagerTable = [];
+    [LoadRecord("EventIslandBreakerMissionTable.json", "Id")]
+    public readonly Dictionary<int, EventIslandBreakerMissionRecord_Raw> EventIslandBreakerMissionTable = [];
+
+
+    // solo raid data Table
+    [LoadRecord("SoloRaidManagerTable.json", "Id")]
+    public readonly Dictionary<int, SoloRaidManagerRecord> SoloRaidManagerTable = [];
+    [LoadRecord("SoloRaidPresetTable.json", "Id")]
+    public readonly Dictionary<int, SoloRaidPresetRecord> SoloRaidPresetTable = [];
+
+    // Solo raid museum
+    [LoadRecord("MuseumCommonStageHpGroupTable.json", "Id")]
+    public readonly Dictionary<int, MuseumCommonStageHpGroupRecord_Raw> MuseumCommonStageHpGroupTable = [];
+    [LoadRecord("MuseumGroupTable.json", "Id")]
+    public readonly Dictionary<int, MuseumGroupRecord_Raw> MuseumGroupTable = [];
+    [LoadRecord("MuseumStageTable.json", "Id")]
+    public readonly Dictionary<int, MuseumStageRecord_Raw> MuseumStageTable = [];
+    [LoadRecord("MuseumStageModeTable.json", "Id")]
+    public readonly Dictionary<int, MuseumStageModeRecord_Raw> MuseumStageModeTable = [];
+    [LoadRecord("MuseumMissionTable.json", "Id")]
+    public readonly Dictionary<int, MuseumMissionRecord_Raw> MuseumMissionTable = [];
+    [LoadRecord("MonsterStageLvChangeTable.json", "Id")]
+    public readonly Dictionary<int, MonsterStageLvChangeRecord> MonsterStageLvChangeTable = [];
+    [LoadRecord("MuseumWeeklyBuffGroupTable.json", "Id")]
+    public readonly Dictionary<int, MuseumWeeklyBuffGroupRecord_Raw> MuseumWeeklyBuffGroupTable = [];
+    [LoadRecord("MuseumWeeklyBuffTable.json", "Id")]
+    public readonly Dictionary<int, MuseumWeeklyBuffRecord_Raw> MuseumWeeklyBuffTable = [];
+
+    // Monster data Table
+    [LoadRecord("MonsterTable.json", "Id")]
+    public readonly Dictionary<long, MonsterRecord> MonsterTable = [];
+    [LoadRecord("MonsterModelTable.json", "Id")]
+    public readonly Dictionary<int, MonsterModelRecord> MonsterModelTable = [];
+    [LoadRecord("MonsterStatEnhanceTable.json", "Id")]
+    public readonly Dictionary<int, MonsterStatEnhanceRecord> MonsterStatEnhanceTable = [];
+    [LoadRecord("WaveDataTable.wave_Intercept_001.json", "StageId")]
+    public readonly Dictionary<int, WaveDataRecord> WaveIntercept001Table = [];
+
+
+    //Field
+    [LoadRecord("FieldPasswordTable.json", "Id")]
+    public readonly Dictionary<int, FieldPasswordRecord_Raw> FieldPasswordTable = [];
+    [LoadRecord("FieldPasswordDoorTable.json", "Id")]
+    public readonly Dictionary<int, FieldPasswordDoorRecord_Raw> FieldPasswordDoorTable = [];
+
+
+    static async Task<GameData> BuildAsync()
+    {
+        await Load();
+
+        Logging.WriteLine("Preparing");
+        Stopwatch stopWatch = new();
+        stopWatch.Start();
+        await Instance.Parse();
+        Instance.RepairMissingSubquestOpeners();
+
+        stopWatch.Stop();
+        Logging.WriteLine("Preparing took " + stopWatch.Elapsed);
+        return Instance;
+    }
+
+    private void RepairMissingSubquestOpeners()
+    {
+        foreach (var subquest in Subquests.Values)
+        {
+            if (string.IsNullOrEmpty(subquest.ConversationId)) continue;
+            var conv = Messages.Values.Where(m => m.ConversationId == subquest.ConversationId).ToList();
+            if (conv.Count > 0 && !conv.Any(m => m.IsOpener))
+            {
+                var first = conv.OrderBy(m => m.Id).FirstOrDefault();
+                if (first != null)
+                {
+                    first.IsOpener = true;
+                }
+            }
+        }
+    }
+
+    public GameData(string mpkFilePath)
+    {
+        if (!File.Exists(mpkFilePath)) throw new ArgumentException("Static data file must exist", nameof(mpkFilePath));
+
+        // disable warnings
+        ZipStream = new();
+
+        byte[] rawBytes2 = File.ReadAllBytes(mpkFilePath);
+        MpkHash = SHA256.HashData(rawBytes2);
+        MpkSize = rawBytes2.Length;
+
+        LoadGameData(mpkFilePath, GameConfig.Root.StaticDataMpk);
+        if (MainZip == null) throw new Exception("failed to read zip file");
+    }
+
+    private class GameCommon
+    {
+        public byte[] SmallNumber { get; set; }
+    }
+
+    #region Data loading
+
+    private void LoadGameData(string file, StaticData data)
+    {
+        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gamecommon.json");
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException("gamecommon.json is required");
+        }
+
+        var numbers = JsonConvert.DeserializeObject<GameCommon>(File.ReadAllText(path));
+
+        using var fileStream = File.OpenRead(file);
+
+        var key2 = Rfc2898DeriveBytes.Pbkdf2(
+            numbers.SmallNumber,
+            data.GetSalt2Bytes(),
+            10000,
+            HashAlgorithmName.SHA256,
+            32);
+
+        using var aes = Aes.Create();
+        aes.Key = key2[..16];
+        aes.IV = key2[16..];
+        aes.Mode = CipherMode.CBC;
+
+        using var decryptStream = new CryptoStream(
+            fileStream,
+            aes.CreateDecryptor(),
+            CryptoStreamMode.Read);
+
+        using var ms = new MemoryStream();
+        decryptStream.CopyTo(ms);
+
+        using var zip = new ZipFile(ms, false);
+
+        var signEntry = zip.GetEntry("sign") ?? throw new Exception("error 1");
+        var dataEntry = zip.GetEntry("data") ?? throw new Exception("error 2");
+
+        using var signStream = zip.GetInputStream(signEntry);
+        using var dataStream = zip.GetInputStream(dataEntry);
+        using var signMs = new MemoryStream();
+        using var dataMs = new MemoryStream();
+
+        signStream.CopyTo(signMs);
+        dataStream.CopyTo(dataMs);
+
+        dataMs.Position = 0;
+
+        var key3 = Rfc2898DeriveBytes.Pbkdf2(
+            numbers.SmallNumber,
+            data.GetSalt1Bytes(),
+            10000,
+            HashAlgorithmName.SHA256,
+            32);
+
+        ZipStream = new MemoryStream();
+        DoTransformation(key3[..16], key3[16..], dataMs, ZipStream);
+        MainZip = new ZipFile(ZipStream, false);
+    }
+
+    public static void DoTransformation(byte[] key, byte[] salt, Stream inputStream, Stream outputStream)
+    {
+        SymmetricAlgorithm aes = Aes.Create();
+        aes.Mode = CipherMode.ECB;
+        aes.Padding = PaddingMode.None;
+
+        int blockSize = aes.BlockSize / 8;
+
+        if (salt.Length != blockSize)
+        {
+            throw new ArgumentException(
+                "Salt size must be same as block size " +
+                $"(actual: {salt.Length}, expected: {blockSize})");
+        }
+
+        byte[] counter = (byte[])salt.Clone();
+
+        Queue<byte> xorMask = new();
+
+        byte[] zeroIv = new byte[blockSize];
+        ICryptoTransform counterEncryptor = aes.CreateEncryptor(key, zeroIv);
+
+        int b;
+        while ((b = inputStream.ReadByte()) != -1)
+        {
+            if (xorMask.Count == 0)
+            {
+                byte[] counterModeBlock = new byte[blockSize];
+
+                counterEncryptor.TransformBlock(
+                    counter, 0, counter.Length, counterModeBlock, 0);
+
+                for (int i2 = counter.Length - 1; i2 >= 0; i2--)
+                {
+                    if (++counter[i2] != 0)
+                    {
+                        break;
+                    }
+                }
+
+                foreach (byte b2 in counterModeBlock)
+                {
+                    xorMask.Enqueue(b2);
+                }
+            }
+
+            byte mask = xorMask.Dequeue();
+            outputStream.WriteByte((byte)(((byte)b) ^ mask));
+        }
+    }
+
+    public static async Task Load()
+    {
+        string? targetFile2 = await AssetDownloadUtil.DownloadOrGetFileAsync(GameConfig.Root.StaticDataMpk.Url, CancellationToken.None) ?? throw new Exception("static data download fail");
+        _instance = new(targetFile2);
+    }
+    #endregion
+
+    public async Task<X[]> LoadZip<X>(string entry, IProgress<double> bar) where X : new()
+    {
+        try
+        {
+            entry = entry.Replace(".json", ".mpk");
+
+            ZipEntry fileEntry = MainZip.GetEntry(entry);
+            if (fileEntry == null)
+            {
+                Logging.WriteLine(entry + " does not exist in static data", LogType.Error);
+                return [];
+            }
+
+            Stream stream = MainZip.GetInputStream(fileEntry);
+            X[] deserializedObject = await MemoryPackSerializer.DeserializeAsync<X[]>(stream) ?? throw new Exception("failed to parse " + entry);
+
+            currentFile++;
+            bar.Report((double)currentFile / totalFiles);
+
+            return deserializedObject;
+        }
+        catch (Exception ex)
+        {
+            Logging.WriteLine($"Failed to parse {entry}:\n{ex}\n", LogType.Error);
+            return [];
+        }
+    }
+
+    public async Task Parse()
+    {
+        using ProgressBar progress = new();
+
+        totalFiles = GameDataInitializer.TotalFiles;
+        if (totalFiles == 0) throw new Exception("Source generator failed.");
+
+        await GameDataInitializer.InitializeGameData(progress);
+
+        foreach (ZipEntry item in MainZip)
+        {
+            if (item.Name.StartsWith("FieldMapData_") && item.Name != "FieldMapData_EventMap.mpk")
+            {
+                FieldMapRecord[] x = await LoadZip<FieldMapRecord>(item.Name, progress);
+
+                foreach (FieldMapRecord map in x)
+                {
+                    MapData.Add(map.Id, map);
+                }
+            }
+        }
+
+        // sanity checks
+        if (QuestDataRecords.Count == 0) throw new Exception("QuestDataRecords should not be empty");
+    }
+
+    public MainQuestRecord? GetMainQuestForStageClearCondition(int stage)
+    {
+        if (QuestDataRecords.Count == 0) throw new Exception("QuestDataRecords should not be empty");
+        foreach (KeyValuePair<int, MainQuestRecord> item in QuestDataRecords)
+        {
+            if (item.Value.ConditionId[0].ConditionId == stage)
+            {
+                return item.Value;
+            }
+        }
+
+        return null;
+    }
+    public MainQuestRecord? GetMainQuestByTableId(int tId)
+    {
+        return QuestDataRecords[tId];
+    }
+    public CampaignStageRecord? GetStageData(int stage)
+    {
+        return StageDataRecords[stage];
+    }
+    public RewardRecord? GetRewardTableEntry(int rewardId)
+    {
+        return RewardDataRecords.TryGetValue(rewardId, out RewardRecord? record) ? record : null;
+    }
+    /// <summary>
+    /// Returns the level and its minimum value for XP value
+    /// </summary>
+    /// <param name="targetExp"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public (int, int) GetUserLevelFromUserExp(int targetExp)
+    {
+        int prevLevel = 0;
+        int prevValue = 0;
+        for (int i = 1; i < UserExpDataRecords.Count + 1; i++)
+        {
+            UserExpRecord item = UserExpDataRecords[i];
+
+            if (prevValue < targetExp)
+            {
+                prevLevel = item.Level;
+                prevValue = item.Exp;
+            }
+            else
+            {
+                return (prevLevel, prevValue);
+            }
+        }
+        return (-1, -1);
+    }
+    public int GetUserMinXpForLevel(int targetLevel)
+    {
+        for (int i = 1; i < UserExpDataRecords.Count + 1; i++)
+        {
+            UserExpRecord item = UserExpDataRecords[i];
+
+            if (targetLevel == item.Level)
+            {
+                return item.Exp;
+            }
+        }
+        return -1;
+    }
+
+
+    /// <summary>
+    /// 获取基础核心等级
+    /// </summary>
+    /// <param name="targetExp">经验</param>
+    /// <returns>等级</returns>
+    /// <exception cref="Exception"></exception>
+    public InfraCoreGradeRecord? GetInfracoreGrade(int grade)
+    {
+        return InfracoreTable.Values.FirstOrDefault(x => x.Grade == grade);
+    }
+
+    public int GetInfraCoreLev(int targetExp)
+    {
+        int level = 1;
+        int maxGrade = 20;
+
+        foreach (var grade in InfracoreTable.Values.OrderBy(g => g.Grade))
+        {
+            if (grade.Grade > maxGrade)
+                maxGrade = grade.Grade;
+
+            if (grade.Grade <= 0 || grade.InfraCoreExp <= 0)
+                continue;
+
+            if (targetExp >= grade.InfraCoreExp)
+            {
+                level = grade.Grade + 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return Math.Clamp(level, 1, maxGrade);
+    }
+    public IEnumerable<int> GetAllCostumes()
+    {
+        foreach (KeyValuePair<int, CharacterCostumeRecord> item in CharacterCostumeTable)
+        {
+            yield return item.Value.Id;
+        }
+    }
+
+    internal ContentsTutorialRecord GetTutorialDataById(int TableId)
+    {
+        return TutorialTable[TableId];
+    }
+
+    public ItemSubType GetItemSubType(int itemType)
+    {
+        // Check if it's an equipment item
+        if (ItemEquipTable.TryGetValue(itemType, out ItemEquipRecord? equipRecord))
+        {
+            return equipRecord.ItemSubType;
+        }
+
+        // Check if it's a harmony cube item
+        if (ItemHarmonyCubeTable.TryGetValue(itemType, out ItemHarmonyCubeRecord? harmonyCubeRecord))
+        {
+            return harmonyCubeRecord.ItemSubType;
+        }
+
+        // Return null if item type not found
+        return ItemSubType.None;
+    }
+
+    internal IEnumerable<int> GetStageIdsForChapter(int chapterNumber, bool normal)
+    {
+        ChapterMod mod = normal ? ChapterMod.Normal : ChapterMod.Hard;
+        foreach (KeyValuePair<int, CampaignStageRecord> item in StageDataRecords)
+        {
+            CampaignStageRecord data = item.Value;
+
+            int chVal = data.ChapterId - 1;
+
+            if (chapterNumber == chVal && data.ChapterMod == mod && data.StageType == StageType.Main)
+            {
+                yield return data.Id;
+            }
+        }
+    }
+
+    public Dictionary<int, CharacterLevelRecord> GetCharacterLevelUpData()
+    {
+        return LevelData;
+    }
+
+    public TacticAcademyFunctionRecord GetTacticAcademyLesson(int lessonId)
+    {
+        return TacticAcademyLessons[lessonId];
+    }
+
+    public IEnumerable<string> GetScenarioStageIdsForChapter(int chapterNumber)
+    {
+        return albumResourceRecords.Values.Where(record => record.TargetChapter == chapterNumber && !string.IsNullOrEmpty(record.ScenarioGroupId)).Select(record => record.ScenarioGroupId);
+    }
+    public bool IsValIdScenarioStage(string scenarioGroupId, int targetChapter, int targetStage)
+    {
+        // Only process stages that belong to the main quest
+        if (!scenarioGroupId.StartsWith("d_main_"))
+        {
+            return false; // Exclude stages that don't belong to the main quest
+        }
+
+        // Example regular stage format: "d_main_26_08"
+        // Example bonus stage format: "d_main_18af_06" or "d_main_39_af_01" (since chapter 39)
+        // Example stage with suffix format: "d_main_01_01_s" or "d_main_01_01_e"
+
+        var matches = Regex.Matches(scenarioGroupId, @"\d+");
+        var parts = new List<int>();
+        foreach (Match match in matches)
+        {
+            if (int.TryParse(match.Value, out int number))
+            {
+                parts.Add(number);
+            }
+        }
+        if (parts.Count < 2) // Valid stage must have at least chapter and stage numbers
+        {
+            return false;
+        }
+
+        int chapter = parts[0];
+        int stage = parts[1];
+
+        // Only accept stages if they are:
+        // 1. In a chapter less than the target chapter
+        // 2. OR in the target chapter but with a stage number less than or equal to the target stage
+        if (chapter < targetChapter || (chapter == targetChapter && (stage <= targetStage)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    internal string GetMapIdFromChapter(int chapter, ChapterMod mod)
+    {
+        CampaignChapterRecord data = ChapterCampaignData[chapter - 1];
+        if (mod == ChapterMod.Hard)
+            return data.HardFieldId;
+        else if (mod == ChapterMod.Normal)
+            return data.FieldId;
+        else if (mod == ChapterMod.Story)
+            return data.StoryFieldId;
+
+        throw new NotImplementedException($"difficulty {mod} not implemented");
+    }
+
+    internal int GetConditionReward(int groupId, long damage)
+    {
+        IEnumerable<KeyValuePair<int, ConditionRewardRecord>> results = ConditionRewards.Where(x => x.Value.Group == groupId && x.Value.ValueMin <= damage && (x.Value.ValueMax == 0 || x.Value.ValueMax >= damage));
+        if (results.Any())
+            return results.FirstOrDefault().Value.RewardId;
+        else return 0;
+    }
+
+    public FavoriteItemQuestRecord? GetFavoriteItemQuestTableData(int questId)
+    {
+        FavoriteItemQuestTable.TryGetValue(questId, out FavoriteItemQuestRecord? data);
+        return data;
+    }
+
+    public FavoriteItemQuestStageRecord? GetFavoriteItemQuestStageData(int stageId)
+    {
+        FavoriteItemQuestStageTable.TryGetValue(stageId, out FavoriteItemQuestStageRecord? data);
+        return data;
+    }
+
+    public static async Task CreateAsync()
+    {
+        _instance = await BuildAsync();
+    }
+}
+
+public class DataTable<T>
+{
+    public string version { get; set; } = "";
+    public List<T> records { get; set; } = [];
+}
