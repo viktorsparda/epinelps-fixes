@@ -79,6 +79,28 @@ so existing `db.json` saves still load:
 New model classes: `ArchiveFieldInfo`, `ArchiveDateSimProgress`,
 `UserEventBoxGachaData`.
 
+### Wine cutscene playback (docs and helper tools)
+
+Story cutscenes need environment fixes outside the server source. See
+[`docs/WINE-CUTSCENES.md`](docs/WINE-CUTSCENES.md) for the four pieces: Wine
+11.22, the `Urlmon` Media Foundation scheme handler, trusting the local CA
+plus routing `cloud.nikke-kr.com` to the server, and the media cache.
+
+Helpers in this repo:
+
+- `tools/wine-shims/cloudredirect.c` — `LD_PRELOAD` resolver shim that maps
+  `cloud.nikke-kr.com` to the local server for one process tree.
+- `tools/wine-shims/offline-net.c` — optional shim that blocks non-loopback
+  connections to test offline playback.
+- `tools/wine-shims/scheme-handlers.reg` — the `http:`/`https:` handler
+  registration.
+- `tools/trust-epinelps-ca.py` — writes the serialized CA blob into a prefix's
+  registry (Wine does not persist runtime-installed certs).
+- `tools/mfprobe/mfprobe.c` — Winelib probe for
+  `MFCreateSourceReaderFromURL`, for verifying a setup.
+
+These are setup/diagnostic tools, not part of the server build.
+
 ## Commit layout
 
 1. `Import EpinelPS 11fce36` — exact upstream tree.
@@ -90,6 +112,9 @@ New model classes: `ArchiveFieldInfo`, `ArchiveDateSimProgress`,
    this outside a Wine prefix that needs it.** It hardcodes a redirect to
    `http://127.0.0.1/media/ch01_end_ja.mp4` for one cutscene. Drop this commit
    for a clean build.
+5. `Document fork provenance, changes and build steps` — README and NOTICE.
+6. `Document Wine cutscene setup and add helper tools` — the cutscene guide and
+   the shims/cert helper/probe.
 
 ## Build
 

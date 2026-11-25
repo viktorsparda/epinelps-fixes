@@ -1,0 +1,18 @@
+Windows Registry Editor Version 5.00
+
+; Route http:/https: through Wine's Urlmon scheme handler instead of winedmo.
+; Import with the prefix stopped:
+;   WINEPREFIX=/path/to/prefix wineserver -k
+;   WINEPREFIX=/path/to/prefix wine reg import scheme-handlers.reg
+
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows Media Foundation\SchemeHandlers\http:]
+"{9ec4b4f9-3029-45ad-947b-344de2a249e2}"="Urlmon Scheme Handler"
+
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows Media Foundation\SchemeHandlers\https:]
+"{9ec4b4f9-3029-45ad-947b-344de2a249e2}"="Urlmon Scheme Handler"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Microsoft\Windows Media Foundation\SchemeHandlers\http:]
+"{9ec4b4f9-3029-45ad-947b-344de2a249e2}"="Urlmon Scheme Handler"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Microsoft\Windows Media Foundation\SchemeHandlers\https:]
+"{9ec4b4f9-3029-45ad-947b-344de2a249e2}"="Urlmon Scheme Handler"
