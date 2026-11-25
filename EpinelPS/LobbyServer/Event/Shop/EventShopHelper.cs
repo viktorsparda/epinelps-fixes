@@ -210,14 +210,28 @@ public static class EventShopHelper
     {
         if (eventId <= 0) return 0;
 
-        if (GameData.Instance.eventManagers.TryGetValue(eventId, out var eventRecord))
+        GameData data = GameData.Instance;
+        if (!data.eventManagers.TryGetValue(eventId, out var eventRecord))
         {
-            if (eventRecord.EventShortcutId is not null && eventRecord.EventShortcutId != "")
-            {
-                return Convert.ToInt32(eventRecord.EventShortcutId);
-            }
+            log.Warn($"EventManager not found for EventId: {eventId}");
+            return 0;
         }
-        log.Warn($"EventManager not found for EventId: {eventId}");
+
+        if (eventRecord.EventSystemType == EventSystemType.StoryEvent)
+        {
+            var storyShop = data.EventStoryTable.Values.FirstOrDefault(story =>
+                story.EventId == eventId && story.ContentsShopId > 0 &&
+                data.ContentsShopTable.ContainsKey(story.ContentsShopId));
+            if (storyShop != null) return storyShop.ContentsShopId;
+        }
+
+        // A shortcut can also be a UI entry, not a shop. Keep existing shortcuts only when
+        // they actually resolve to a shop, including the standalone ShopEvent path.
+        if (int.TryParse(eventRecord.EventShortcutId, out int shopId) &&
+            shopId > 0 && data.ContentsShopTable.ContainsKey(shopId))
+            return shopId;
+
+        log.Warn($"No shop found for EventId: {eventId}");
         return 0;
     }
 

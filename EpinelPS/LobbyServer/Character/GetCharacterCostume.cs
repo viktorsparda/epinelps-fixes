@@ -7,12 +7,15 @@ public class GetCharacterCostume : LobbyMessage
 {
     protected override async Task HandleAsync()
     {
-        ReqGetCharacterCostumeData req = await ReadData<ReqGetCharacterCostumeData>();
+        _ = await ReadData<ReqGetCharacterCostumeData>();
 
         ResGetCharacterCostumeData response = new();
+        User user = GetUser();
 
-        // return all
-        response.CostumeIds.AddRange(GameData.Instance.GetAllCostumes());
+        // Return the costumes this user actually owns. Returning every costume
+        // from static data made removed/unowned costumes appear owned to the
+        // client and broke the costume-gacha "already owned" state.
+        response.CostumeIds.AddRange(user.CostumeList);
 
         await WriteDataAsync(response);
     }

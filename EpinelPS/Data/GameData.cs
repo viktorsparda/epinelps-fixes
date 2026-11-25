@@ -166,6 +166,16 @@ public class GameData
     [LoadRecord("EventManagerTable.json", "Id")]
     public readonly Dictionary<int, EventManagerRecord> eventManagers = [];
 
+    // EventBoxGacha / costume gacha
+    [LoadRecord("EventBoxGachaTable.json", "Id")]
+    public readonly Dictionary<int, EventBoxGachaRecord> EventBoxGachaTable = [];
+    [LoadRecord("EventBoxGachaPriceTable.json", "Id")]
+    public readonly Dictionary<int, EventBoxGachaPriceRecord> EventBoxGachaPriceTable = [];
+    [LoadRecord("EventBoxGachaProbTable.json", "Id")]
+    public readonly Dictionary<int, EventBoxGachaProbRecord> EventBoxGachaProbTable = [];
+    [LoadRecord("EventBoxGachaRewardTable.json", "Id")]
+    public readonly Dictionary<int, EventBoxGachaRewardRecord> EventBoxGachaRewardTable = [];
+
     [LoadRecord("LiveWallpaperTable.json", "Id")]
     public readonly Dictionary<int, LiveWallpaperRecord> LiveWallpaperTable = [];
 

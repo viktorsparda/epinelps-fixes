@@ -165,9 +165,9 @@ internal class Program
 
             app.MapControllers();
 
-            app.MapGet("/prdenv/{**all}", AssetDownloadUtil.HandleReq);
-            app.MapGet("/PC/{**all}", AssetDownloadUtil.HandleReq);
-            app.MapGet("/media/{**all}", AssetDownloadUtil.HandleReq);
+            app.MapMethods("/prdenv/{**all}", new[] { "GET", "HEAD" }, AssetDownloadUtil.HandleReq);
+            app.MapMethods("/PC/{**all}", new[] { "GET", "HEAD" }, AssetDownloadUtil.HandleReq);
+            app.MapMethods("/media/{**all}", new[] { "GET", "HEAD" }, AssetDownloadUtil.HandleReq);
             app.MapPost("/rqd/sync", HandleRqd);
 
             // NOTE: pub prefixes shows public (production server), local is local server (does not have any effect), dev is development server, etc.

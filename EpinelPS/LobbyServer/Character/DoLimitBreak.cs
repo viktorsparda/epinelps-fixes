@@ -22,48 +22,58 @@ public class DoLimitBreak : LobbyMessage
         // Find the element with the current csn from the request
         CharacterRecord currentCharacter = fullchardata.FirstOrDefault(c => c.Id == targetCharacter.Tid) ?? throw new NullReferenceException();
 
-        if (currentCharacter != null && targetCharacter != null)
+        if (currentCharacter.GradeCoreId == 103 || currentCharacter.GradeCoreId == 11 || currentCharacter.GradeCoreId == 201)
         {
-            if (currentCharacter.GradeCoreId == 103 || currentCharacter.GradeCoreId == 11 || currentCharacter.GradeCoreId == 201)
-            {
-                Console.WriteLine("cannot limit break any further!");
-                await WriteDataAsync(response);
-                return;
-            }
-
-            // Find a new CSN based on the `NameCode` of the current character and `GradeCoreId + req.Count`
-            // For some reason, there is a seperate character for each limit/core break value.
-            CharacterRecord? newCharacter = fullchardata.FirstOrDefault(c => c.NameCode == currentCharacter.NameCode && c.GradeCoreId == currentCharacter.GradeCoreId + req.Count);
-
-
-            if (newCharacter != null)
-            {
-                // replace character in DB with new character
-                targetCharacter.Grade += req.Count;
-                targetCharacter.Tid = newCharacter.Id;
-
-                response.Character = new NetUserCharacterDefaultData()
-                {
-                    Csn = req.Csn,
-                    CostumeId = targetCharacter.CostumeId,
-                    Grade = targetCharacter.Grade,
-                    Lv = targetCharacter.Level,
-                    Skill1Lv = targetCharacter.Skill1Lvl,
-                    Skill2Lv = targetCharacter.Skill2Lvl,
-                    Tid = targetCharacter.Tid,
-                    UltiSkillLv = targetCharacter.UltimateLevel
-                };
-
-                // remove spare body item
-                DbItemData bodyItem = user.Items.FirstOrDefault(i => i.Isn == req.Isn) ?? throw new NullReferenceException();
-                user.RemoveItemBySerialNumber(req.Isn, req.Count);
-                response.Items.Add(NetUtils.ToNet(bodyItem));
-
-                JsonDb.Save();
-            }
+            Logging.WriteLine($"Limit break rejected: {targetCharacter.Tid} is already at maximum grade", LogType.Warning);
+            response.Character = ToNet(targetCharacter);
+            await WriteDataAsync(response);
+            return;
         }
+
+        // Find a new CSN based on the `NameCode` of the current character and `GradeCoreId + req.Count`
+        // For some reason, there is a seperate character for each limit/core break value.
+        CharacterRecord? newCharacter = fullchardata.FirstOrDefault(c => c.NameCode == currentCharacter.NameCode && c.GradeCoreId == currentCharacter.GradeCoreId + req.Count);
+
+        if (newCharacter == null)
+        {
+            // No next grade exists. Return the current character so the client keeps
+            // the correct grade instead of resetting to Grade 0 / keeping the
+            // limit-break button enabled (and without throwing a client NRE).
+            Logging.WriteLine($"Limit break rejected: no grade {currentCharacter.GradeCoreId + req.Count} for {currentCharacter.NameCode}", LogType.Warning);
+            response.Character = ToNet(targetCharacter);
+            await WriteDataAsync(response);
+            return;
+        }
+
+        // replace character in DB with new character
+        targetCharacter.Grade += req.Count;
+        targetCharacter.Tid = newCharacter.Id;
+
+        response.Character = ToNet(targetCharacter);
+
+        // remove spare body item
+        DbItemData bodyItem = user.Items.FirstOrDefault(i => i.Isn == req.Isn) ?? throw new NullReferenceException();
+        user.RemoveItemBySerialNumber(req.Isn, req.Count);
+        response.Items.Add(NetUtils.ToNet(bodyItem));
+
+        JsonDb.Save();
 
         // Send the response back to the client
         await WriteDataAsync(response);
+    }
+
+    private static NetUserCharacterDefaultData ToNet(CharacterModel character)
+    {
+        return new NetUserCharacterDefaultData()
+        {
+            Csn = character.Csn,
+            CostumeId = character.CostumeId,
+            Grade = character.Grade,
+            Lv = character.Level,
+            Skill1Lv = character.Skill1Lvl,
+            Skill2Lv = character.Skill2Lvl,
+            Tid = character.Tid,
+            UltiSkillLv = character.UltimateLevel
+        };
     }
 }

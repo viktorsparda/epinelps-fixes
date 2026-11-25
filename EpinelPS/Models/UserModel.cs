@@ -49,6 +49,7 @@ public class User
     public Dictionary<string, FieldInfoNew> FieldInfoNew { get; set; } = [];
     public Dictionary<int, List<int>> ViewedNoticePopupTableIds { get; set; } = [];
     public Dictionary<string, string> MapJson { get; set; } = [];
+    public Dictionary<int, ArchiveDateSimProgress> ArchiveDateSimProgressById { get; set; } = [];
     public Dictionary<CurrencyType, long> Currency { get; set; } = new() {
             { CurrencyType.ContentStamina, 2 }
         };
@@ -146,10 +147,12 @@ public class User
     public Dictionary<int, LoginEventData> LoginEventInfo { get; set; } = [];
     public Dictionary<int, EventMissionData> EventMissionInfo { get; set; } = []; // key: eventId
     public Dictionary<int, EventShopBuyCountData> EventShopBuyCountInfo { get; set; } = []; // key: eventId
+    public Dictionary<int, UserEventBoxGachaData> EventBoxGachaData { get; set; } = []; // key: eventId
 
     // Archive unlock state. These are persisted in db.json with the rest of the user.
     public List<int> UnlockedArchiveRecordIds { get; set; } = [];
     public List<int> UnlockedArchiveEventQuestIds { get; set; } = [];
+    public Dictionary<string, ArchiveFieldInfo> ArchiveFieldInfo { get; set; } = []; // key: field map id
 
     public Dictionary<int, NormalShopState> NormalShopStates { get; set; } = []; // key: shop category    
     public List<NetPlaySodaEachGameInfo> ArcadePlaySodaInfoList { get; set; } = [];
