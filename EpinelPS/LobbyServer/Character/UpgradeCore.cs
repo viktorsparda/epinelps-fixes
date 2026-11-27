@@ -18,18 +18,45 @@ public class CoreUpgrade : LobbyMessage
         // Get all character data from the game's character table
         List<CharacterRecord> fullchardata = [.. GameData.Instance.CharacterTable.Values];
 
-        CharacterModel targetCharacter = user.GetCharacterBySerialNumber(req.Csn) ?? throw new NullReferenceException();
-
-        // Find the element with the current csn from the request
-        CharacterRecord? currentCharacter = fullchardata.FirstOrDefault(c => c.Id == targetCharacter.Tid);
-
-        if (currentCharacter == null)
+        CharacterModel? targetCharacter = user.GetCharacterBySerialNumber(req.Csn);
+        if (targetCharacter == null)
         {
+            Logging.WriteLine($"Core upgrade rejected: no character for csn {req.Csn}", LogType.Warning);
             await WriteDataAsync(response);
             return;
         }
 
-        if (currentCharacter.GradeCoreId == 103 || currentCharacter.GradeCoreId == 11 || currentCharacter.GradeCoreId == 201)
+        if (!GameData.Instance.CharacterTable.TryGetValue(targetCharacter.Tid, out CharacterRecord? currentCharacter))
+        {
+            Logging.WriteLine($"Core upgrade rejected: tid {targetCharacter.Tid} is not in the character table", LogType.Warning);
+            response.Character = ToNet(targetCharacter);
+            await WriteDataAsync(response);
+            return;
+        }
+
+        int maxLimitBreakGradeCoreId = CharacterGradeHelper.MaxLimitBreakGradeCoreId(currentCharacter.OriginalRare);
+        int maxGradeCoreId = CharacterGradeHelper.MaxGradeCoreId(currentCharacter.OriginalRare);
+
+        if (currentCharacter.OriginalRare != OriginalRareType.SSR || maxGradeCoreId == maxLimitBreakGradeCoreId)
+        {
+            Logging.WriteLine($"Core upgrade rejected: {targetCharacter.Tid} ({currentCharacter.OriginalRare}) has no core enhancement", LogType.Warning);
+            response.Character = ToNet(targetCharacter);
+            await WriteDataAsync(response);
+            return;
+        }
+
+        if (currentCharacter.GradeCoreId < maxLimitBreakGradeCoreId)
+        {
+            Logging.WriteLine(
+                $"Core upgrade rejected: {targetCharacter.Tid} is not at maximum limit break yet " +
+                $"({currentCharacter.GradeCoreId}/{maxLimitBreakGradeCoreId})",
+                LogType.Warning);
+            response.Character = ToNet(targetCharacter);
+            await WriteDataAsync(response);
+            return;
+        }
+
+        if (currentCharacter.GradeCoreId >= maxGradeCoreId)
         {
             Logging.WriteLine($"Core upgrade rejected: {targetCharacter.Tid} is already at maximum grade", LogType.Warning);
             response.Character = ToNet(targetCharacter);
@@ -37,32 +64,56 @@ public class CoreUpgrade : LobbyMessage
             return;
         }
 
-        // Find a new CSN based on the `NameCode` of the current character and `GradeCoreId + req.Count`
+        if (req.Count <= 0)
+        {
+            Logging.WriteLine($"Core upgrade rejected: invalid count {req.Count} for {targetCharacter.Tid}", LogType.Warning);
+            response.Character = ToNet(targetCharacter);
+            await WriteDataAsync(response);
+            return;
+        }
+
+        int used = Math.Min(req.Count, maxGradeCoreId - currentCharacter.GradeCoreId);
+        int newGradeCoreId = currentCharacter.GradeCoreId + used;
+
+        // Find a new CSN based on the `NameCode` of the current character and `GradeCoreId + used`
         // For some reason, there is a seperate character for each limit/core break value.
-        CharacterRecord? newCharacter = fullchardata.FirstOrDefault(c => c.NameCode == currentCharacter.NameCode && c.GradeCoreId == currentCharacter.GradeCoreId + req.Count);
+        CharacterRecord? newCharacter = fullchardata.FirstOrDefault(
+            c => c.NameCode == currentCharacter.NameCode && c.GradeCoreId == newGradeCoreId);
 
         if (newCharacter == null)
         {
             // No next grade exists. Return the current character so the client keeps
             // the correct grade/state instead of resetting to Grade 0.
-            Logging.WriteLine($"Core upgrade rejected: no grade {currentCharacter.GradeCoreId + req.Count} for {currentCharacter.NameCode}", LogType.Warning);
+            Logging.WriteLine($"Core upgrade rejected: no grade {newGradeCoreId} for {currentCharacter.NameCode}", LogType.Warning);
+            response.Character = ToNet(targetCharacter);
+            await WriteDataAsync(response);
+            return;
+        }
+
+        DbItemData? bodyItem = user.Items.FirstOrDefault(i => i.Isn == req.Isn);
+        if (bodyItem == null || bodyItem.ItemType != currentCharacter.PieceId || bodyItem.Count < used)
+        {
+            Logging.WriteLine(
+                $"Core upgrade rejected: spare body isn {req.Isn} missing/wrong/insufficient for " +
+                $"tid {targetCharacter.Tid} (need {used})",
+                LogType.Warning);
             response.Character = ToNet(targetCharacter);
             await WriteDataAsync(response);
             return;
         }
 
         // replace character in DB with new character
-        targetCharacter.Grade += req.Count;
         targetCharacter.Tid = newCharacter.Id;
-
+        targetCharacter.Grade = CharacterGradeHelper.GradeIndex(newCharacter);
         response.Character = ToNet(targetCharacter);
 
-        // remove spare body item
-        DbItemData bodyItem = user.Items.FirstOrDefault(i => i.Isn == req.Isn) ?? throw new NullReferenceException();
-        user.RemoveItemBySerialNumber(req.Isn, req.Count);
+        // remove the consumed spare bodies
+        bodyItem.Count -= used;
+        if (bodyItem.Count <= 0)
+            user.Items.Remove(bodyItem);
         response.Items.Add(NetUtils.ToNet(bodyItem));
 
-        if (newCharacter.GradeCoreId == 103 || newCharacter.GradeCoreId == 11 || newCharacter.GradeCoreId == 201)
+        if (newCharacter.GradeCoreId == maxGradeCoreId)
         {
             user.AddTrigger(Trigger.CharacterGradeMax, 1);
         }

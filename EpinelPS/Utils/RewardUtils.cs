@@ -1,4 +1,5 @@
 using EpinelPS.Data;
+using EpinelPS.LobbyServer.Character;
 using Google.Protobuf.WellKnownTypes;
 
 namespace EpinelPS.Utils;
@@ -456,9 +457,10 @@ public class RewardUtils
             if (user.GetCharacter(rewardId) is CharacterModel ownedCharacter)
             {
                 DbItemData? spareItem = user.Items.FirstOrDefault(i => i.ItemType == character.PieceId);
-                int maxLimitBroken = GetValueByRarity(character.OriginalRare, 0, 2, 11) - 1;
+                int maxGradeIndex = CharacterGradeHelper.MaxGradeIndex(character.OriginalRare);
 
-                bool canIncreaseItem = character.OriginalRare != OriginalRareType.R && ownedCharacter.Grade + (spareItem?.Count ?? 0) < maxLimitBroken;
+                bool canIncreaseItem = character.OriginalRare != OriginalRareType.R &&
+                    CharacterGradeHelper.GradeIndex(ownedCharacter) + (spareItem?.Count ?? 0) < maxGradeIndex;
                 (int newSpareItemCount, int dissoluteCharacterCount) = canIncreaseItem ? (1, 0) : (0, 1);
                 if (canIncreaseItem)
                 {

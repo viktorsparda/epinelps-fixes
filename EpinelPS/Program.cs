@@ -2,6 +2,7 @@ using EpinelPS.Data;
 using EpinelPS.Database;
 using EpinelPS.Interfaces;
 using EpinelPS.LobbyServer;
+using EpinelPS.LobbyServer.Character;
 using EpinelPS.Networking;
 using EpinelPS.Services;
 using EpinelPS.Utils;
@@ -46,6 +47,7 @@ internal class Program
             }
 
             await GameData.CreateAsync();
+            CharacterGradeHelper.NormalizeSavedGrades();
             foreach (var user in JsonDb.Instance.Users)
             {
                 if (user.LastNormalStageCleared >= 6000002)

@@ -1,5 +1,6 @@
 using EpinelPS.Data;
 using EpinelPS.Database;
+using EpinelPS.LobbyServer.Character;
 using EpinelPS.LobbyServer.Stage;
 using EpinelPS.LobbyServer.Tower;
 using EpinelPS.Models.Admin;
@@ -722,9 +723,10 @@ public class AdminCommands
 
                 if (newCharData != null)
                 {
-                    // Update the character's Tid and Grade
+                    // Update the character's Tid and Grade. Grade is the 0-based
+                    // stage index, not the raw GradeCoreId.
                     character.Tid = newCharData.Id;
-                    character.Grade = newGradeCoreId;
+                    character.Grade = CharacterGradeHelper.GradeIndex(newCharData);
                 }
 
             }
@@ -743,9 +745,10 @@ public class AdminCommands
 
                 if (newCharData != null)
                 {
-                    // Update the character's Tid and Grade
+                    // Update the character's Tid and Grade. Grade is the 0-based
+                    // stage index, not the raw GradeCoreId.
                     character.Tid = newCharData.Id;
-                    character.Grade = newGradeCoreId;
+                    character.Grade = CharacterGradeHelper.GradeIndex(newCharData);
                 }
 
             }

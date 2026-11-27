@@ -1,5 +1,6 @@
 using EpinelPS.Data;
 using EpinelPS.Database;
+using EpinelPS.LobbyServer.Character;
 using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Inventory;
@@ -49,14 +50,15 @@ public class UsePiece : LobbyMessage
             if (user.GetCharacter(character.Id) is CharacterModel ownedCharacter)
             {
                 // If the character already exists, we can increase its piece count
-                int maxLimitBroken = GetValueByRarity(character.OriginalRare, 0, 2, 11);
-                bool canIncreaseItem = character.OriginalRare != OriginalRareType.R && ownedCharacter.Grade + (spareItem?.Count ?? 0) < maxLimitBroken;
+                int maxGradeIndex = CharacterGradeHelper.MaxGradeIndex(character.OriginalRare);
+                bool canIncreaseItem = character.OriginalRare != OriginalRareType.R &&
+                    CharacterGradeHelper.GradeIndex(ownedCharacter) + (spareItem?.Count ?? 0) < maxGradeIndex;
                 (int newSpareItemCount, int dissoluteCharacterCount) = canIncreaseItem ? (1, 0) : (0, 1);
                 if (canIncreaseItem)
                 {
                     if (spareItem != null)
                     {
-                        spareItem.Count = newSpareItemCount;
+                        spareItem.Count += newSpareItemCount;
                     }
                     else
                     {

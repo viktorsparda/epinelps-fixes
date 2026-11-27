@@ -16,6 +16,7 @@
 
 using EpinelPS.Data;
 using EpinelPS.Database;
+using EpinelPS.LobbyServer.Character;
 using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Gacha;
@@ -92,37 +93,16 @@ public class ExecGacha : LobbyMessage
                     UltiSkillLv = character.UltimateLevel,
                     Skill1Lv = character.Skill1Lvl,
                     Skill2Lv = character.Skill2Lvl,
-                    Tid = characterData.Id,
+                    Tid = character.Tid,
                 });
-
-                bool increase_item = false;
 
                 gacha.Sn = character.Csn;
                 gacha.Tid = characterData.Id;
 
-                // Check if we can add upgrade item
-                if (characterData.OriginalRare == OriginalRareType.SR)
-                {
-                    if (existingItem != null && character.Grade + existingItem.Count <= 1)
-                    {
-                        increase_item = true;
-                    }
-                    else if (existingItem == null && character.Grade <= 1)
-                    {
-                        increase_item = true;
-                    }
-                }
-                else if (characterData.OriginalRare == OriginalRareType.SSR)
-                {
-                    if (existingItem != null && character.Grade + existingItem.Count <= 10)
-                    {
-                        increase_item = true;
-                    }
-                    else if (existingItem == null && character.Grade <= 10)
-                    {
-                        increase_item = true;
-                    }
-                }
+                // Check if we can add upgrade item. Use the stage stored in the
+                // owned character's Tid, not the raw Grade value, so a stale save
+                // cannot hand out spare bodies for an already maxed character.
+                bool increase_item = CharacterGradeHelper.CanReceiveSpareBody(character, characterData, existingItem?.Count ?? 0);
 
                 if (increase_item)
                 {
