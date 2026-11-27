@@ -6,25 +6,52 @@ This repository is a modified version of **EpinelPS**:
 - Base commit: `11fce367effe04c14e029cc67419f03c5a9afbdf` (2026-11-20)
 - License: GNU Affero General Public License v3.0 (see `LICENSE`)
 
-Modifications were made on 2026-11-24 and 2026-11-25. They are described in
-`README.md` and in the Git history after the `Import EpinelPS 11fce36` commit.
+Modifications were made between 2026-11-24 and 2026-11-26. They are described
+in `README.md` and in the Git history after the `Import EpinelPS 11fce36` commit.
 
-The modified files are:
+The modified upstream files are:
 
-- `EpinelPS/Program.cs`
-- `EpinelPS/Data/GameData.cs`
-- `EpinelPS/Models/UserModel.cs`
 - `EpinelPS/Commands/Services/CliLoop.cs`
+- `EpinelPS/Data/GameData.cs`
+- `EpinelPS/LobbyServer/Archive/ArchiveClearStage.cs`
+- `EpinelPS/LobbyServer/Archive/FastClearArchiveStage.cs`
+- `EpinelPS/LobbyServer/Archive/GetArchives.cs`
 - `EpinelPS/LobbyServer/Archive/GetMinigameData.cs`
 - `EpinelPS/LobbyServer/Character/DoLimitBreak.cs`
 - `EpinelPS/LobbyServer/Character/GetCharacterCostume.cs`
 - `EpinelPS/LobbyServer/Character/UpgradeCore.cs`
 - `EpinelPS/LobbyServer/Event/ExecuteEventBoxGacha.cs`
+- `EpinelPS/LobbyServer/Event/GetChallengeStage.cs`
 - `EpinelPS/LobbyServer/Event/GetEventBoxGacha.cs`
-- `EpinelPS/LobbyServer/Event/EventBoxGachaHelper.cs` (new 2026-11-25)
 - `EpinelPS/LobbyServer/Event/Shop/EventShopHelper.cs`
-- and the new files added under `EpinelPS/LobbyServer/` and `EpinelPS/Models/`
-  in commit 2 of the history.
+- `EpinelPS/LobbyServer/Gacha/ExecGacha.cs`
+- `EpinelPS/LobbyServer/Gacha/ExecutePityGacha.cs`
+- `EpinelPS/LobbyServer/Intercept/AnomalousFastClear.cs`
+- `EpinelPS/LobbyServer/Intercept/AnomalousFinish.cs`
+- `EpinelPS/LobbyServer/Inventory/UsePiece.cs`
+- `EpinelPS/LobbyServer/LobbyHandler.cs`
+- `EpinelPS/LobbyServer/LobbyUser/Mail/ReadMail.cs`
+- `EpinelPS/LobbyServer/Minigame/nksv2/Get.cs`
+- `EpinelPS/Models/Admin/RunCmdModel.cs`
+- `EpinelPS/Models/DbModels.cs`
+- `EpinelPS/Models/UserModel.cs`
+- `EpinelPS/Program.cs`
+- `EpinelPS/Utils/AdminCommands.cs`
+- `EpinelPS/Utils/RewardUtils.cs`
+
+The removed upstream files (stub handlers replaced by
+`EpinelPS/LobbyServer/Minigame/IslandAdventure/LegacyIslandAdventure.cs`) are:
+
+- `EpinelPS/LobbyServer/Minigame/IslandAdventure/EventCurrency.cs`
+- `EpinelPS/LobbyServer/Minigame/IslandAdventure/EventInventory.cs`
+- `EpinelPS/LobbyServer/Minigame/IslandAdventure/FishSpotCount.cs`
+- `EpinelPS/LobbyServer/Minigame/IslandAdventure/GetFishingStepUpRewardStatus.cs`
+- `EpinelPS/LobbyServer/Minigame/IslandAdventure/GetPhotoStepUpRewardStatus.cs`
+- `EpinelPS/LobbyServer/Minigame/IslandAdventure/ListMission.cs`
+- `EpinelPS/LobbyServer/Minigame/IslandAdventure/PhotoData.cs`
+
+All other files under `EpinelPS/` that are not in the import commit are new
+files added by this fork.
 
 The changes were developed with AI assistance; see the AI disclosure in
 `README.md`. This fork is not affiliated with or endorsed by the EpinelPS

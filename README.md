@@ -86,18 +86,33 @@ Full details, ordering and troubleshooting:
 - **Crash fixes** — the console loop no longer spins on EOF (it burned a core
   and wrote ~640 KB/s to `server.log`); the newbie-package handler no longer
   makes the client throw.
-- **Character fixes** — limit break / core upgrade return the current character
-  when maxed instead of resetting the client to grade 0; owned costumes are
+- **Character fixes** — limit break / core upgrade use one grade helper
+  (`CharacterGradeHelper`): exact spare-body validation, caps, no crossing
+  from limit break into core, consistent Tid/grade in gacha duplicates and
+  spare bodies; saved grades are normalized at startup. Owned costumes are
   returned instead of every costume in static data.
-- **Event fixes** — the event-shop lookup resolves the real shop, box gacha is
-  implemented (price/probability/reward tables, server-authoritative rolls),
-  rerun costume boxes drop a costume the commander already owns (the official
-  nine-draw rule instead of awarding a duplicate), and the archive
-  field/DateSim handlers persist their state.
+- **Event fixes** — the event-shop lookup resolves the real shop, including
+  the original shops of archived events; box gacha is implemented
+  (price/probability/reward tables, server-authoritative rolls) and rerun
+  costume boxes drop a costume the commander already owns (the official
+  nine-draw rule); challenge stages have enter/clear/fast-clear handlers,
+  item tickets (3 granted once) and first-clear/repeat rewards; anomalous
+  intercept returns non-null rewards; read mail is persisted.
+- **Archive** — stage rewards are paid on the first clear; the six archive
+  event-quest episodes work (activate, clear, stage clear, claim once,
+  reset); every `/archive/minigame/*` route answers with its own response
+  type, with real state for Red Ash NKS (content manager 2), the Volt Road
+  dice board, tower defense, text adventure, battle simulator, PlaySoda and
+  island adventure (fishing, shop, photos, missions, step-up rewards; also
+  the live `/event/minigame/islandadventure/*` routes). The archive field
+  and DateSim handlers persist their state.
 - **Missing handlers** — character toggles, battle-log team types, logout,
   archive minigame JSON.
-- **Persistence** — three new per-user collections, all defaulting to empty so
-  older `db.json` saves still load.
+- **Persistence** — new per-user fields and collections, all defaulting to
+  empty so older `db.json` saves still load.
+- **Admin / testing** — optional `EPINELPS_HTTP_PORT` / `EPINELPS_HTTPS_PORT`
+  test ports (defaults stay 80/443), a `resolve-name` command, and fixes for
+  `add-locale` paths on Linux and path arguments in `RunCmd`.
 - **Asset routes** — `/prdenv`, `/PC` and `/media` accept `HEAD`.
 
 ## Scripts
@@ -111,6 +126,7 @@ Full details, ordering and troubleshooting:
 | `scripts/run-launcher.sh` | launcher wrapper with the environment it needs |
 | `scripts/check-setup.sh` | read-only health check |
 | `scripts/package-release.sh` | build a release tarball under `out/` |
+| `scripts/regression.py` | server-contract regression suite (sandboxed copy on port 8443, safe beside a running server) |
 | `tools/wine-shims/build.sh` | build the resolver and offline shims |
 | `tools/trust-epinelps-ca.py` | write the CA trust blob into a prefix |
 
@@ -142,7 +158,12 @@ sudo setcap cap_net_bind_service=+ep "$EPINELPS_DATA/server/EpinelPS"
 
 - Tested against the **153.6.10** client. A different client version needs a
   matching `TargetVersion`/`gameconfig.json` and static data.
-- No automated tests; CI only builds.
+- `scripts/regression.py` checks the server contract of every fix against a
+  sandboxed copy of an existing install (it needs your installed static data
+  and an admin account: `EPINELPS_ADMIN_EMAIL` / `EPINELPS_ADMIN_PASSWORD`,
+  default `me@local` / `password`). CI only builds. Some client-side issues
+  remain, e.g. a failed fishing cast in the archive island adventure freezes
+  the client.
 - Nothing auto-updates. Server, content and client updates are manual; the
   client and assets are never redistributed here.
 - The git history contains one **local-only** commit that redirects a single
