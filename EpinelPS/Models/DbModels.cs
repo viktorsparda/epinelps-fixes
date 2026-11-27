@@ -85,6 +85,8 @@ public class EventData
     public int LastStage { get; set; } = 0; // Default value for LastStage
     public int LastDay { get; set; } = 0;
     public int FreeTicket { get; set; } = 0;
+    /// <summary>Challenge tickets are granted once per event.</summary>
+    public bool ChallengeTicketsGranted { get; set; } = false;
 }
 public class EventCollectData
 {
