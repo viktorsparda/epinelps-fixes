@@ -1,3 +1,4 @@
+using EpinelPS.Data;
 using EpinelPS.Models;
 
 namespace EpinelPS.LobbyServer.Event;
@@ -11,11 +12,21 @@ public class GetEventBoxGacha : LobbyMessage
         User user = GetUser();
 
         ResGetEventBoxGacha response = new();
-        if (user.EventBoxGachaData.TryGetValue(req.EventId, out UserEventBoxGachaData? gachaData))
+        UserEventBoxGachaData? gachaData = null;
+        if (user.EventBoxGachaData.TryGetValue(req.EventId, out UserEventBoxGachaData? data))
         {
-            response.GachaCount = gachaData.GachaCount;
-            response.RewardOrders.AddRange(gachaData.RewardOrders);
+            gachaData = data;
+            response.GachaCount = data.GachaCount;
         }
+
+        HashSet<int> ownedCostumeOrders = [];
+        EventBoxGachaRecord? boxGacha = GameData.Instance.EventBoxGachaTable.Values.FirstOrDefault(x => x.EventId == req.EventId);
+        if (boxGacha != null)
+        {
+            ownedCostumeOrders = EventBoxGachaHelper.GetOwnedCostumeOrders(user, boxGacha.GachaRewardGroup);
+        }
+
+        response.RewardOrders.AddRange(EventBoxGachaHelper.GetResolvedOrders(gachaData, ownedCostumeOrders));
 
         await WriteDataAsync(response);
     }

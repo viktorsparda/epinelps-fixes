@@ -21,6 +21,7 @@ The modified files are:
 - `EpinelPS/LobbyServer/Character/UpgradeCore.cs`
 - `EpinelPS/LobbyServer/Event/ExecuteEventBoxGacha.cs`
 - `EpinelPS/LobbyServer/Event/GetEventBoxGacha.cs`
+- `EpinelPS/LobbyServer/Event/EventBoxGachaHelper.cs` (new 2026-11-25)
 - `EpinelPS/LobbyServer/Event/Shop/EventShopHelper.cs`
 - and the new files added under `EpinelPS/LobbyServer/` and `EpinelPS/Models/`
   in commit 2 of the history.

@@ -91,7 +91,9 @@ Full details, ordering and troubleshooting:
   returned instead of every costume in static data.
 - **Event fixes** — the event-shop lookup resolves the real shop, box gacha is
   implemented (price/probability/reward tables, server-authoritative rolls),
-  and the archive field/DateSim handlers persist their state.
+  rerun costume boxes drop a costume the commander already owns (the official
+  nine-draw rule instead of awarding a duplicate), and the archive
+  field/DateSim handlers persist their state.
 - **Missing handlers** — character toggles, battle-log team types, logout,
   archive minigame JSON.
 - **Persistence** — three new per-user collections, all defaulting to empty so
