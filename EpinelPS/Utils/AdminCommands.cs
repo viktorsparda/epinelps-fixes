@@ -1004,7 +1004,7 @@ public class AdminCommands
                             Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "cache", "local-locale"));
                         var dir = Path.Combine(AppContext.BaseDirectory, "cache", "local-locale");
                         var newName = $"{result}.lsc";
-                        File.Copy(file, $"{dir}\\{newName}", true);
+                        File.Copy(file, Path.Combine(dir, newName), true);
                         Console.WriteLine($"{newName} added successfully!");
                         filesAdded++;
                     }

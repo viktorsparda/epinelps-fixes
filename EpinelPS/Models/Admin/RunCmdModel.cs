@@ -17,6 +17,11 @@ public static class RunCmdRequestExtensions
     {
         if (string.IsNullOrEmpty(req.p2)) return [];
 
+        // A filesystem path is always a single argument, even if it contains
+        // '-' (the legacy separator) or spaces.
+        if (req.p2.Contains('/') || req.p2.Contains('\\'))
+            return [req.p2];
+
         // New format: space-separated (e.g. "1 2", "100 5")
         if (req.p2.Contains(' '))
             return req.p2.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

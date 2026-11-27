@@ -64,7 +64,11 @@ internal class Program
             Logging.WriteLine("Register handlers");
             LobbyHandler.Init();
 
-            Logging.WriteLine("Starting ASP.NET core on ports 80 and 443");
+            // Optional unprivileged test ports; production defaults stay 80/443.
+            int httpPort = int.TryParse(Environment.GetEnvironmentVariable("EPINELPS_HTTP_PORT"), out int hp) ? hp : 80;
+            int httpsPort = int.TryParse(Environment.GetEnvironmentVariable("EPINELPS_HTTPS_PORT"), out int sp) ? sp : 443;
+
+            Logging.WriteLine($"Starting ASP.NET core on ports {httpPort} and {httpsPort}");
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             // Configure HTTPS
@@ -77,13 +81,13 @@ internal class Program
 
             builder.WebHost.ConfigureKestrel(serverOptions =>
             {
-                serverOptions.Listen(IPAddress.Any, 443,
+                serverOptions.Listen(IPAddress.Any, httpsPort,
                     listenOptions =>
                     {
                         listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
                         listenOptions.UseHttps(AppDomain.CurrentDomain.BaseDirectory + @"site.pfx", "");
                     });
-                serverOptions.Listen(IPAddress.Loopback, 80,
+                serverOptions.Listen(IPAddress.Loopback, httpPort,
                listenOptions =>
                {
                    listenOptions.Protocols = HttpProtocols.Http1;
