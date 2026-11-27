@@ -190,6 +190,17 @@ public class GameData
 
     [LoadRecord("ArchiveEventQuestTable.json", "Id")]
     public readonly Dictionary<int, ArchiveEventQuestRecord_Raw> archiveEventQuestRecords = [];
+
+    [LoadRecord("ArchiveEventQuestManagerTable.json", "Id")]
+    public readonly Dictionary<int, ArchiveEventQuestManagerRecord_Raw> archiveEventQuestManagerTable = [];
+
+    // Shared event-quest tables: the archive episodes reuse these rows (the
+    // archive copies drop RewardId, so rewards must come from EventQuestTable).
+    [LoadRecord("EventQuestTable.json", "Id")]
+    public readonly Dictionary<int, EventQuestRecord> eventQuestTable = [];
+
+    [LoadRecord("EventQuestStageTable.json", "Id")]
+    public readonly Dictionary<int, EventQuestStageRecord> eventQuestStageTable = [];
     [LoadRecord("ArchiveMessengerConditionTable.json", "Id")]
     public readonly Dictionary<int, ArchiveMessengerConditionRecord> archiveMessengerConditionRecords = [];
 

@@ -152,6 +152,13 @@ public class User
     // Archive unlock state. These are persisted in db.json with the rest of the user.
     public List<int> UnlockedArchiveRecordIds { get; set; } = [];
     public List<int> UnlockedArchiveEventQuestIds { get; set; } = [];
+    // Archive event-quest episode progress (record ids: 1000100..1000600).
+    public int ActivatedArchiveEventQuestRecordId { get; set; } = 0;
+    public List<int> ClearedArchiveEventQuestIds { get; set; } = [];
+    public List<int> ClearedArchiveEventQuestStageIds { get; set; } = [];
+    public List<int> ClaimedArchiveEventQuestRewardIds { get; set; } = [];
+    public List<int> ClaimedArchiveEventQuestStageRewardIds { get; set; } = [];
+    public List<int> ClaimedArchiveEventQuestRecordRewardIds { get; set; } = [];
     public Dictionary<string, ArchiveFieldInfo> ArchiveFieldInfo { get; set; } = []; // key: field map id
 
     public Dictionary<int, NormalShopState> NormalShopStates { get; set; } = []; // key: shop category    
