@@ -5,9 +5,19 @@ public class AnomalousFastClear : LobbyMessage
 {
     protected override async Task HandleAsync()
     {
-        ReqFastClearInterceptAnomalous req = await ReadData<ReqFastClearInterceptAnomalous>();
+        _ = await ReadData<ReqFastClearInterceptAnomalous>();
 
-        ResFastClearInterceptAnomalous response = new();
+        // The client applies these rewards after the result screen; never send
+        // null NetRewardData payloads.
+        ResFastClearInterceptAnomalous response = new()
+        {
+            NormalReward = new NetRewardData(),
+            BonusReward = new NetRewardData(),
+            NormalRewardByRewardUpEvent = new NetRewardData(),
+            BonusRewardByRewardUpEvent = new NetRewardData(),
+            TodayRemainingTickets = 5,
+            MaxTicketCount = 5,
+        };
 
         await WriteDataAsync(response);
     }
