@@ -464,3 +464,6 @@ EpinelPS/Protos/allmsgs.proto
 /tools/wine-shims/*.so
 /tools/mfprobe/*.exe
 /tools/mfprobe/*.pdb
+
+# Regression harness sandbox and schema cache (scripts/regression.py)
+.regression/
