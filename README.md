@@ -75,6 +75,7 @@ Full details, ordering and troubleshooting:
 | `EpinelPS/` | server source with the fixes listed below |
 | `ServerSelector/` | upstream server-selector tools |
 | `launcher/` | unmodified EpinelPSLauncher source at pinned `d219c64` |
+| `patches/` | launcher patch applied at build time (private hosts file instead of `/etc/hosts`) |
 | `vendor/launcher-windows/` | the 4 Windows helper binaries the launcher needs |
 | `vendor/server-data/` | `gamecommon.json`, required at server startup |
 | `scripts/` | build, install, server control, launcher wrapper, checks |
@@ -114,13 +115,18 @@ Full details, ordering and troubleshooting:
   test ports (defaults stay 80/443), a `resolve-name` command, and fixes for
   `add-locale` paths on Linux and path arguments in `RunCmd`.
 - **Asset routes** — `/prdenv`, `/PC` and `/media` accept `HEAD`.
+- **Launcher** — on Linux the launcher writes its redirect block to the
+  private hosts file that `scripts/run-launcher.sh` gives the game through
+  bubblewrap, not to `/etc/hosts`: no password prompt on every local login,
+  and an official client on the same machine keeps working
+  (`patches/launcher-private-hosts.patch`, applied to a copy at build time).
 
 ## Scripts
 
 | Script | Purpose |
 |---|---|
 | `scripts/build-server.sh` | build the server to `out/server` |
-| `scripts/build-launcher.sh` | build the bundled launcher to `out/launcher` |
+| `scripts/build-launcher.sh` | build the bundled launcher (with `patches/`) to `out/launcher` |
 | `scripts/install.sh` | install both, preserving saves and config |
 | `scripts/server.sh` | `start` / `stop` / `status` / `restart` |
 | `scripts/run-launcher.sh` | launcher wrapper with the environment it needs |
@@ -145,8 +151,10 @@ dotnet publish EpinelPS/EpinelPS.csproj -c Release -r linux-x64 --self-contained
 dotnet publish launcher/EpinelPSLauncher/EpinelPSLauncher.csproj -c Release -r linux-x64 --self-contained true -o out/launcher
 ```
 
-Then copy the four binaries from `vendor/launcher-windows/` next to the launcher
-binary; `scripts/build-launcher.sh` does this for you.
+A manual launcher build skips `patches/launcher-private-hosts.patch` (apply it
+with `patch -p1 -d launcher` first, or use the script) and needs the four
+binaries from `vendor/launcher-windows/` next to the launcher binary;
+`scripts/build-launcher.sh` does both for you.
 
 The server binds ports 80 and 443. Grant the capability once (or run as root):
 

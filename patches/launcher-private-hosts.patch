@@ -1,0 +1,117 @@
+diff --git a/EpinelPSLauncher/Utils/PathUtil.cs b/EpinelPSLauncher/Utils/PathUtil.cs
+index f584e3a..398498c 100644
+--- a/EpinelPSLauncher/Utils/PathUtil.cs
++++ b/EpinelPSLauncher/Utils/PathUtil.cs
+@@ -18,12 +18,40 @@ public class PathUtil
+             }
+             else if (OperatingSystem.IsLinux())
+             {
+-                return "/etc/hosts";
++                // Never the machine-wide /etc/hosts: epinelps-wine bind-mounts
++                // this private copy over /etc/hosts inside the game's bubblewrap
++                // namespace, so redirecting to a local server cannot break the
++                // official client installed alongside it.
++                return PrivateHostsFile;
+             }
+             else throw new NotImplementedException("Unsupported operating system");
+         }
+     }
+ 
++    /// <summary>
++    /// Per-instance hosts file used on Linux in place of /etc/hosts. The
++    /// epinelps-launcher wrapper exports EPINELPS_HOSTS_FILE for it.
++    /// </summary>
++    public static string PrivateHostsFile
++    {
++        get
++        {
++            string? explicitPath = Environment.GetEnvironmentVariable("EPINELPS_HOSTS_FILE");
++            if (!string.IsNullOrEmpty(explicitPath)) return explicitPath;
++
++            string? dataDir = Environment.GetEnvironmentVariable("EPINELPS_DATA");
++            if (string.IsNullOrEmpty(dataDir))
++            {
++                string? xdgData = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
++                dataDir = string.IsNullOrEmpty(xdgData)
++                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "EpinelPS")
++                    : Path.Combine(xdgData, "EpinelPS");
++            }
++
++            return Path.Combine(dataDir, "hosts");
++        }
++    }
++
+     public string? WineHostsFile => GameBasePath + "../../../wine_prefix/drive_c/windows/system32/drivers/etc/hosts";
+ 
+     public string? LauncherCertificatePath
+diff --git a/EpinelPSLauncher/Utils/ServerSwitcher.cs b/EpinelPSLauncher/Utils/ServerSwitcher.cs
+index 7133aeb..824bf3d 100644
+--- a/EpinelPSLauncher/Utils/ServerSwitcher.cs
++++ b/EpinelPSLauncher/Utils/ServerSwitcher.cs
+@@ -15,14 +15,26 @@ public class ServerSwitcher
+ 
+     private static PathUtil util = new();
+ 
++    private static string ReadHostsFile(string? path)
++    {
++        try
++        {
++            return !string.IsNullOrEmpty(path) && File.Exists(path) ? File.ReadAllText(path) : "";
++        }
++        catch
++        {
++            return "";
++        }
++    }
++
+     public static bool IsUsingLocalServer()
+     {
+-        return File.ReadAllText(util.SystemHostsFile).Contains("global-lobby.nikke-kr.com");
++        return ReadHostsFile(util.SystemHostsFile).Contains("global-lobby.nikke-kr.com");
+     }
+ 
+     public static bool IsOffline()
+     {
+-        return File.ReadAllText(util.SystemHostsFile ?? "").Contains("cloud.nikke-kr.com");
++        return ReadHostsFile(util.SystemHostsFile).Contains("cloud.nikke-kr.com");
+     }
+ 
+     public static (bool, string?) SetBasePath(string basePath)
+@@ -153,9 +165,36 @@ public class ServerSwitcher
+         }
+     }
+ 
++    /// <summary>
++    /// Creates the Linux private hosts file from the system one on first use,
++    /// so the game keeps normal name resolution plus the redirect block.
++    /// </summary>
++    private static async Task SeedPrivateHostsFile(string filePath)
++    {
++        try
++        {
++            string? dir = Path.GetDirectoryName(filePath);
++            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
++
++            string seed = File.Exists("/etc/hosts") ? await File.ReadAllTextAsync("/etc/hosts") : "";
++            await File.WriteAllTextAsync(filePath, seed);
++        }
++        catch (Exception ex)
++        {
++            throw new Exception($"Cannot create private hosts file \"{filePath}\"", ex);
++        }
++    }
++
+     private static async Task UpdateHostsFileIfNeeded(string filePath, string newBlock)
+     {
+-        if (!File.Exists(filePath)) return;
++        if (!File.Exists(filePath))
++        {
++            // The game's private hosts file may not exist on a fresh setup; seed
++            // it from /etc/hosts. Other targets (e.g. the Wine prefix copy) are
++            // optional and simply skipped.
++            if (filePath != util.SystemHostsFile) return;
++            await SeedPrivateHostsFile(filePath);
++        }
+ 
+         try
+         {

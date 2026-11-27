@@ -62,7 +62,13 @@ developers.
 - `launcher/` is an unmodified copy of the EpinelPSLauncher source from
   <https://github.com/EpinelPS/EpinelPSLauncher> at commit
   `d219c64347328de627764dcfd2f82f31199a7569`, licensed AGPL-3.0 (its `LICENSE`
-  is included in that directory). See `launcher/BUNDLED.md`.
+  is included in that directory). See `launcher/BUNDLED.md`. The launcher
+  binary built by `scripts/build-launcher.sh` is a **modified** version: it
+  applies `patches/launcher-private-hosts.patch` (changes
+  `EpinelPSLauncher/Utils/PathUtil.cs` and
+  `EpinelPSLauncher/Utils/ServerSwitcher.cs`, 2026-11-25) to a temporary copy
+  so that, on Linux, the launcher uses a private hosts file instead of
+  `/etc/hosts`.
 - `vendor/launcher-windows/` contains the four Windows-only helper binaries
   built from that same launcher commit, with `SHA256SUMS`. See its `README.md`.
 - `vendor/server-data/gamecommon.json` is the runtime configuration file from
