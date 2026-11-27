@@ -42,6 +42,34 @@ public class GameData
 
     [LoadRecord("ArchiveEventDungeonStageTable.json", "Id")]
     public readonly Dictionary<int, ArchiveEventDungeonStageRecord> archiveEventDungeonStageRecords = [];
+
+    // Island Adventure (Coral Island / Beauty Full Shot) and its fishing/photo content.
+    [LoadRecord("IslandAdventureManagerTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureManagerRecord> IslandAdventureManagerTable = [];
+    [LoadRecord("IslandAdventureItemTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureItemRecord> IslandAdventureItemTable = [];
+    [LoadRecord("IslandAdventureShopTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureShopRecord> IslandAdventureShopTable = [];
+    [LoadRecord("IslandAdventureMissionTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureMissionRecord> IslandAdventureMissionTable = [];
+    [LoadRecord("IslandAdventureFishCollectionTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureFishCollectionRecord> IslandAdventureFishCollectionTable = [];
+    [LoadRecord("IslandAdventureAlbumTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureAlbumRecord> IslandAdventureAlbumTable = [];
+    [LoadRecord("IslandAdventureStepUpRewardTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureStepUpRewardRecord> IslandAdventureStepUpRewardTable = [];
+    [LoadRecord("IslandAdventureTutorialListTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureTutorialListRecord> IslandAdventureTutorialListTable = [];
+    [LoadRecord("IslandAdventureUnionRankingTable.json", "Id")]
+    public readonly Dictionary<int, IslandAdventureUnionRankingRecord> IslandAdventureUnionRankingTable = [];
+    [LoadRecord("FishTable.json", "Id")]
+    public readonly Dictionary<int, FishRecord> FishTable = [];
+    [LoadRecord("FishingSpotTable.json", "Id")]
+    public readonly Dictionary<int, FishingSpotRecord> FishingSpotTable = [];
+    [LoadRecord("PhotoTable.json", "Id")]
+    public readonly Dictionary<int, PhotoRecord> PhotoTable = [];
+    [LoadRecord("PhotoSpotTable.json", "Id")]
+    public readonly Dictionary<int, PhotoSpotRecord> PhotoSpotTable = [];
     [LoadRecord("CashShopTable.json", "Id")]
     public readonly Dictionary<int, CashShopRecord> CashShopRecords = [];
     [LoadRecord("FunctionTable.json", "Id")]
