@@ -211,8 +211,27 @@ public static class EventShopHelper
         if (eventId <= 0) return 0;
 
         GameData data = GameData.Instance;
+
+        // Archived / older story events still ship their original event shop, but
+        // the current EventStoryTable row has ContentsShopId = 0.  Every event
+        // shop that is still explicitly referenced follows
+        //   9000000 + (eventId % 1000) * 100 + 1
+        // (validated 55/55 against all rows with a non-zero ContentsShopId).
+        // Use it as a fallback only when the table row exists and the shop is
+        // really present in ContentsShopTable.
+        int PatternShopId()
+        {
+            int candidate = 9000000 + (eventId % 1000) * 100 + 1;
+            return data.ContentsShopTable.ContainsKey(candidate) ? candidate : 0;
+        }
+
         if (!data.eventManagers.TryGetValue(eventId, out var eventRecord))
         {
+            if (data.EventStoryTable.Values.Any(story => story.EventId == eventId))
+            {
+                int fallbackShopId = PatternShopId();
+                if (fallbackShopId > 0) return fallbackShopId;
+            }
             log.Warn($"EventManager not found for EventId: {eventId}");
             return 0;
         }
@@ -223,6 +242,9 @@ public static class EventShopHelper
                 story.EventId == eventId && story.ContentsShopId > 0 &&
                 data.ContentsShopTable.ContainsKey(story.ContentsShopId));
             if (storyShop != null) return storyShop.ContentsShopId;
+
+            int fallbackShopId = PatternShopId();
+            if (fallbackShopId > 0) return fallbackShopId;
         }
 
         // A shortcut can also be a UI entry, not a shop. Keep existing shortcuts only when
