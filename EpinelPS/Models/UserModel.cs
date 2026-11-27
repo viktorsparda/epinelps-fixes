@@ -152,6 +152,13 @@ public class User
     // Archive unlock state. These are persisted in db.json with the rest of the user.
     public List<int> UnlockedArchiveRecordIds { get; set; } = [];
     public List<int> UnlockedArchiveEventQuestIds { get; set; } = [];
+    // Raw /archive/minigame/{get,set}data documents, keyed by event id.
+    public Dictionary<int, string> ArchiveMiniGameData { get; set; } = [];
+    // JSON state for the other archive minigames, keyed by "<family>:<managerId>".
+    public Dictionary<string, string> ArchiveMiniGameState { get; set; } = [];
+    // Archive NKS content manager (e.g. 2). The client requests nKsId 3 (engine)
+    // for the same run, so /arcade/nksv2/get must use this manager's missions.
+    public int ArchiveNksManagerId { get; set; } = 0;
     // Archive event-quest episode progress (record ids: 1000100..1000600).
     public int ActivatedArchiveEventQuestRecordId { get; set; } = 0;
     public List<int> ClearedArchiveEventQuestIds { get; set; } = [];

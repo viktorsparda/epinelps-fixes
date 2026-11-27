@@ -523,6 +523,14 @@ public class GameData
     public readonly Dictionary<int, EventNKSCommonSettingsRecord> EventNKSCommonSettingsTable = [];
     [LoadRecord("EventNKSMissionTable.json", "Id")]
     public readonly Dictionary<int, EventNKSMissionRecord> EventNKSMissionTable = [];
+    [LoadRecord("EventNKSCharacterTable.json", "Id")]
+    public readonly Dictionary<int, EventNKSCharacterRecord> EventNKSCharacterTable = [];
+    [LoadRecord("EventNKSStageTable.json", "Id")]
+    public readonly Dictionary<int, EventNKSStageRecord> EventNKSStageTable = [];
+    [LoadRecord("EventDiceTable.json", "Id")]
+    public readonly Dictionary<int, EventDiceRecord> EventDiceTable = [];
+    [LoadRecord("EventDiceBoardTable.json", "Id")]
+    public readonly Dictionary<int, EventDiceBoardRecord> EventDiceBoardTable = [];
 
 
     //Bubble March

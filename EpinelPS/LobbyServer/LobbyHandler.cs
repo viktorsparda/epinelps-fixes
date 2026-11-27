@@ -1,6 +1,7 @@
 ﻿using ASodium;
 using EpinelPS.Database;
 using EpinelPS.Utils;
+using EpinelPS.LobbyServer.Archive;
 using Google.Protobuf;
 using Paseto;
 using Paseto.Builder;
@@ -79,6 +80,13 @@ public static class LobbyHandler
 
         if (handler == null)
         {
+            // Archive minigames without a dedicated handler still need their
+            // own response type; EmptyHandler answers with ResGetNow and makes
+            // the client throw on deserialize.
+            if (path.StartsWith("/archive/minigame/", StringComparison.Ordinal) &&
+                await ArchiveMinigameFallback.TryWriteAsync(path, ctx))
+                return;
+
             Logging.WriteLine($"[LobbyHandler] No handler for: {path}", LogType.Error);
             //ctx.Response.StatusCode = 404;
 

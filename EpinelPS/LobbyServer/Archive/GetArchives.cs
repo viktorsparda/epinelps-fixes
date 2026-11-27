@@ -1,4 +1,5 @@
 using EpinelPS.Data;
+using EpinelPS.Database;
 using EpinelPS.Utils;
 
 namespace EpinelPS.LobbyServer.Archive;
@@ -18,6 +19,10 @@ public class GetArchives : LobbyMessage
         response.ArchiveRecordManagerList.AddRange(allIds);
 
         User user = GetUser();
+        // Archive dice are event items; make sure the stock exists before the
+        // dice board is opened (it also refills to 0 -> 20 in dice/get).
+        ArchiveDiceHelper.EnsureDice(user);
+        JsonDb.Save();
         if (GameConfig.Root.ArchiveUnlockAll == true)
         {
             response.UnlockedArchiveRecordList.AddRange(allIds);
